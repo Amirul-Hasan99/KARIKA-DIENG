@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
-    "build": "node --max-old-space-size=4096 ./node_modules/next/dist/bin/next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -19,7 +19,7 @@
     "lucide-react": "^0.475.0",
     "micromatch": "^4.0.8",
     "midtrans-client": "^1.4.2",
-    "next": "15.2.1",
+    "next": "15.2.9",
     "node-releases": "^2.0.55",
     "qrcode": "^1.5.4",
     "react": "19.0.0",
