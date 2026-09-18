@@ -29,8 +29,8 @@ if not exist ".env.local" (
 )
 
 :: 3. Cek node_modules
-if not exist "node_modules\" (
-    echo [INFO] Folder node_modules belum ada. Memulai proses instalasi paket...
+if not exist "node_modules\next\" (
+    echo [INFO] Paket Next.js / node_modules belum lengkap. Memulai proses instalasi paket...
     call npm install
     if %errorlevel% neq 0 (
         color 0C
