@@ -1,0 +1,5 @@
+# Environment setup
+
+Required server variables: `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, `STORE_LAT`, `STORE_LNG`. Firebase Admin credentials must remain server-only. For the protected admin workspace set `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and a private `ADMIN_SESSION_SECRET` of at least 32 characters. Generate a session secret locally with `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`. QRIS additionally needs `MIDTRANS_SERVER_KEY`, `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY`, and `NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION`. Use actual provider-issued credentials; example placeholders are not credentials. Never commit `.env.local`.
+
+Admin sessions are signed, HttpOnly, SameSite=Strict cookies with an eight-hour expiry. Admin pages and operational APIs require a valid signature. The checkout, verified Midtrans webhook, guest order lookup, and legacy catalog read routes remain public. Set real admin secrets in `.env.local`; do not use the empty example values.

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateOrderPayment } from "@/lib/order-store";
+import { notifyPaymentOnWhatsApp } from "@/lib/whatsapp";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +14,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const updated = await updateOrderPayment(orderId, "settlement", "cash", `cash_${Date.now()}`);
+    const updated = await updateOrderPayment(orderId, "settlement", "cod", `cash_${Date.now()}`);
+    if (updated) await notifyPaymentOnWhatsApp(updated);
 
     if (!updated) {
       return NextResponse.json(

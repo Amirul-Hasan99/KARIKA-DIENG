@@ -16,20 +16,19 @@ if (!global.__globalMenuStock) {
 }
 
 const ordersStore = global.__globalOrdersStore;
+const hasFirestoreCredentials = () => Boolean(adminDb && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY);
 
 export async function saveOrder(order: Order): Promise<Order> {
-  // Save in memory
-  ordersStore.set(order.id, order);
-
-  // Sync to Firestore if adminDb is active
-  try {
-    if (adminDb && typeof adminDb.collection === "function") {
-      await adminDb.collection("orders").doc(order.id).set(order);
-    }
-  } catch (err) {
-    console.warn("[order-store] Firestore write fallback to memory:", err);
+  // In local demo mode, retain orders for the lifetime of the dev server when
+  // Firebase credentials have not been supplied. Production still requires Firestore.
+  if (!hasFirestoreCredentials() || (!process.env.FIREBASE_CLIENT_EMAIL && process.env.NODE_ENV !== "production")) {
+    if (process.env.NODE_ENV === "production") throw new Error("Persistent order database is not configured.");
+    ordersStore.set(order.id, order);
+    return order;
   }
-
+  // The persistent write must succeed before the caller confirms an order.
+  await adminDb!.collection("orders").doc(order.id).create(order);
+  ordersStore.set(order.id, order);
   return order;
 }
 
@@ -48,8 +47,8 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
 
   // Check Firestore
   try {
-    if (adminDb && typeof adminDb.collection === "function") {
-      const docSnap = await adminDb.collection("orders").doc(orderId).get();
+    if (hasFirestoreCredentials()) {
+      const docSnap = await adminDb!.collection("orders").doc(orderId).get();
       if (docSnap.exists) {
         const data = { ...docSnap.data(), id: docSnap.id } as Order;
         ordersStore.set(orderId, data);
@@ -57,7 +56,7 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
       }
 
       // Check by order_number
-      const querySnap = await adminDb
+      const querySnap = await adminDb!
         .collection("orders")
         .where("order_number", "==", orderId)
         .limit(1)
@@ -118,8 +117,8 @@ export async function updateOrderPayment(
 
   // Update Firestore
   try {
-    if (adminDb && typeof adminDb.collection === "function") {
-      const ordersRef = adminDb.collection("orders");
+    if (hasFirestoreCredentials()) {
+      const ordersRef = adminDb!.collection("orders");
       const updatePayload: any = {
         payment_status: paymentStatus,
         order_status: nextOrderStatus,
@@ -162,8 +161,8 @@ export async function updateOrderStatus(
   ordersStore.set(order.id, updated);
 
   try {
-    if (adminDb && typeof adminDb.collection === "function") {
-      await adminDb.collection("orders").doc(order.id).update({
+    if (hasFirestoreCredentials()) {
+      await adminDb!.collection("orders").doc(order.id).update({
         order_status: newStatus,
         updated_at: now,
       });
@@ -175,13 +174,28 @@ export async function updateOrderStatus(
   return updated;
 }
 
+export async function updateOrderDeliveryStatus(orderId: string, deliveryStatus: NonNullable<Order["delivery_status"]>): Promise<Order | null> {
+  const order = await getOrderById(orderId);
+  if (!order) return null;
+  const updated = { ...order, delivery_status: deliveryStatus, updated_at: new Date().toISOString() };
+  ordersStore.set(order.id, updated);
+  if (hasFirestoreCredentials()) await adminDb!.collection("orders").doc(order.id).update({ delivery_status: deliveryStatus, updated_at: updated.updated_at });
+  return updated;
+}
+
+export async function markWhatsAppConfirmationSent(orderId: string, sentAt: string) {
+  const order = ordersStore.get(orderId);
+  if (order) ordersStore.set(orderId, { ...order, whatsapp_confirmation_sent_at: sentAt });
+  if (hasFirestoreCredentials()) await adminDb!.collection("orders").doc(orderId).update({ whatsapp_confirmation_sent_at: sentAt });
+}
+
 export async function getAllKitchenOrders(): Promise<Order[]> {
   const result: Order[] = [];
 
   // Try Firestore
   try {
-    if (adminDb && typeof adminDb.collection === "function") {
-      const snap = await adminDb
+    if (hasFirestoreCredentials()) {
+      const snap = await adminDb!
         .collection("orders")
         .where("payment_status", "==", "settlement")
         .get();
@@ -218,8 +232,8 @@ export async function getAllOrdersAdmin(): Promise<Order[]> {
 
   // Try Firestore
   try {
-    if (adminDb && typeof adminDb.collection === "function") {
-      const snap = await adminDb.collection("orders").get();
+    if (hasFirestoreCredentials()) {
+      const snap = await adminDb!.collection("orders").get();
       snap.forEach((doc) => {
         result.push({ ...doc.data(), id: doc.id } as Order);
       });
@@ -260,8 +274,8 @@ export async function cancelOrder(orderId: string, reason: string = "Dibatalkan"
   ordersStore.set(order.id, updated);
 
   try {
-    if (adminDb && typeof adminDb.collection === "function") {
-      await adminDb.collection("orders").doc(order.id).update({
+    if (hasFirestoreCredentials()) {
+      await adminDb!.collection("orders").doc(order.id).update({
         payment_status: "failed",
         order_status: "completed",
         updated_at: now,

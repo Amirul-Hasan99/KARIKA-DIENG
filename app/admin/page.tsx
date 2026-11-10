@@ -390,22 +390,22 @@ export default function AdminDashboardPage() {
             <Link
               href="/"
               className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-sm sm:shadow-md shadow-amber-500/20 hover:opacity-95 transition"
-              title="Kembali ke Beranda"
+              title="Dioleh2 — Beranda"
             >
               <Coffee className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2} />
             </Link>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <h1 className="text-sm sm:text-lg font-black tracking-tight text-slate-900 truncate">
-                  <span className="sm:hidden">Admin &amp; POS</span>
-                  <span className="hidden sm:inline">PANEL ADMIN &amp; KASIR POS</span>
+                  <span className="sm:hidden">Admin Dioleh2</span>
+                  <span className="hidden sm:inline">OPERASIONAL DIOLEH2</span>
                 </h1>
                 <span className="hidden sm:inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200 shrink-0">
-                  KOPI &amp; SNACK
+                  OLEH-OLEH DIENG
                 </span>
               </div>
               <p className="text-[11px] sm:text-xs text-slate-500 truncate max-w-[190px] xs:max-w-xs sm:max-w-none">
-                Kontrol Meja, Pembayaran Tunai &amp; QRIS
+                Panel internal Dioleh2
               </p>
             </div>
           </div>
@@ -438,25 +438,21 @@ export default function AdminDashboardPage() {
               )}
             </button>
 
-            {/* Link to kitchen display */}
             <Link
-              href="/admin/kitchen"
+              href="/catalog"
               className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
             >
-              <ChefHat className="h-3.5 w-3.5 text-amber-600" />
-              <span className="hidden sm:inline">Layar Dapur (KDS)</span>
+              <span>Lihat katalog</span>
+              <ExternalLink className="h-3.5 w-3.5" />
             </Link>
-
-            {/* Link to customer self-order */}
-            <Link
-              href="/table/table-01"
-              target="_blank"
-              className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-white shadow-sm hover:bg-amber-600 transition active:scale-95 whitespace-nowrap"
-            >
-              <span className="hidden sm:inline">Buka Meja 01</span>
-              <span className="sm:hidden">Meja 01</span>
-              <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            <Link href="/admin/delivery" className="flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-amber-900 hover:bg-amber-100 transition">
+              <span>Pesanan & pengiriman</span>
             </Link>
+            <button
+              type="button"
+              onClick={async () => { await fetch("/api/admin/logout", { method: "POST" }); window.location.assign("/admin/login"); }}
+              className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-black"
+            >Keluar</button>
           </div>
         </div>
       </header>

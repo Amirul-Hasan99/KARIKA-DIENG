@@ -94,6 +94,23 @@ export interface Order {
   snap_redirect_url?: string;
   created_at: any;
   updated_at: any;
+  delivery_address?: string;
+  coordinates?: { lat: number; lng: number };
+  delivery_distance_km?: number;
+  delivery_status?: 'pending' | 'assigned' | 'picked_up' | 'delivered' | 'failed_attempt';
+  courier_id?: string;
+  whatsapp_confirmation_sent_at?: string;
+}
+
+export interface DiolehProduct {
+  id: string;
+  slug: string;
+  category_id: string;
+  name: string;
+  description: string;
+  image_url?: string;
+  is_available: boolean;
+  variants: Array<{ id: string; name: string; price: number; stock: number }>;
 }
 
 // Midtrans Snap API Payloads

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyMidtransSignature, isPaymentSettled } from "@/lib/midtrans";
 import { PaymentStatus } from "@/types";
 import { updateOrderPayment } from "@/lib/order-store";
+import { notifyPaymentOnWhatsApp } from "@/lib/whatsapp";
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,22 +25,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // In production, verify SHA-512 signature key if provided
-    if (signature_key && process.env.NODE_ENV === "production") {
-      const isSignatureValid = verifyMidtransSignature({
-        orderId: order_id,
-        statusCode: status_code,
-        grossAmount: gross_amount,
-        signatureKey: signature_key,
-      });
-
-      if (!isSignatureValid) {
-        console.error("Invalid Midtrans signature key for order:", order_id);
-        return NextResponse.json(
-          { error: "Signature verification failed." },
-          { status: 403 }
-        );
-      }
+    if (!signature_key || !verifyMidtransSignature({
+      orderId: order_id,
+      statusCode: status_code,
+      grossAmount: gross_amount,
+      signatureKey: signature_key,
+    })) {
+      return NextResponse.json({ error: "Signature verification failed." }, { status: 403 });
     }
 
     // Determine target payment status
@@ -65,6 +57,7 @@ export async function POST(req: NextRequest) {
       payment_type || "qris",
       transaction_id
     );
+    if (updatedOrder && paymentStatus === "settlement") await notifyPaymentOnWhatsApp(updatedOrder);
 
     return NextResponse.json({
       status: "success",

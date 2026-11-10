@@ -3,19 +3,33 @@
 @import "tailwindcss/utilities";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --brand-yellow: #f59e0b;
-  --brand-orange: #ea580c;
+  --background: 48 33% 96%;
+  --foreground: 0 0% 16%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 16%;
+  --primary: 51 100% 48%;
+  --primary-foreground: 0 0% 16%;
+  --secondary: 48 33% 94%;
+  --secondary-foreground: 0 0% 28%;
+  --muted: 48 20% 94%;
+  --muted-foreground: 0 0% 52%;
+  --border: 45 16% 90%;
+  --input: 45 16% 90%;
+  --ring: 51 100% 42%;
+  --radius: 0.875rem;
 }
 
 @layer base {
   body {
-    background-color: var(--background);
-    color: var(--foreground);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     -webkit-tap-highlight-color: transparent;
   }
+}
+
+@layer base {
+  * { border-color: hsl(var(--border)); }
 }
 
 /* Custom scrollbar for horizontal categories */

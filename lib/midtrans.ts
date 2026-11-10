@@ -8,7 +8,7 @@ import {
   MidtransSnapTransactionResponse,
 } from "@/types";
 
-const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || "SB-Mid-server-YOUR_SERVER_KEY_HERE";
+const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || "";
 const MIDTRANS_CLIENT_KEY = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "SB-Mid-client-YOUR_CLIENT_KEY_HERE";
 const IS_PRODUCTION = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === "true";
 
@@ -59,21 +59,18 @@ export async function createSnapTransaction(
     ],
   };
 
+  if (!MIDTRANS_SERVER_KEY || !MIDTRANS_CLIENT_KEY || MIDTRANS_CLIENT_KEY.includes("YOUR_CLIENT_KEY")) {
+    throw new Error("Midtrans credentials are not configured.");
+  }
   try {
     const transaction = await snap.createTransaction(parameter);
     return {
       token: transaction.token,
       redirect_url: transaction.redirect_url,
     };
-  } catch (error: any) {
-    console.warn("Midtrans Snap SDK call failed, generating simulated sandbox token:", error?.message || error);
-    const mockToken = `snap-token-${orderId}-${Date.now()}`;
-    const mockRedirect = `https://app.sandbox.midtrans.com/snap/v2/vtweb/${mockToken}`;
-    return {
-      token: mockToken,
-      redirect_url: mockRedirect,
-      isSimulated: true,
-    };
+  } catch (error) {
+    console.error("Midtrans Snap transaction creation failed.", error);
+    throw new Error("Midtrans tidak dapat membuat transaksi. Pesanan belum dibuat.");
   }
 }
 
