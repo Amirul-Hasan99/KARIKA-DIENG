@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Flaticon } from "@/components/ui/Flaticon";
+import { BrandLogoIcon } from "@/components/ui/BrandLogo";
 
 export default function AdminLoginForm() {
   const [busy, setBusy] = useState(false);
@@ -48,8 +49,8 @@ export default function AdminLoginForm() {
         </Link>
         <Card className="rounded-3xl shadow-sm border border-[#e8e5dc]">
           <CardHeader className="space-y-4 p-7 pb-5 sm:p-8 sm:pb-5">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#f4ce00]/25 text-[#766600]">
-              <Flaticon name="lock" variant="sr" className="text-xl" />
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#292a23] text-[#f4ce00] shadow-sm">
+              <BrandLogoIcon size={24} color="#f4ce00" />
             </div>
             <div>
               <CardTitle className="text-2xl font-bold tracking-tight">

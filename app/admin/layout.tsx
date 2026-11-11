@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { BrandLogoIcon } from "@/components/ui/BrandLogo";
 
 export default function AdminLayout({
   children,
@@ -88,9 +89,11 @@ export default function AdminLayout({
     return (
       <div className="min-h-screen grid place-items-center bg-[#f8f7f2] text-[#292a23]">
         <div className="flex flex-col items-center gap-3">
-          <i className="fi fi-rr-lock text-3xl text-amber-600 animate-pulse" />
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#292a23] text-[#f4ce00] shadow-md animate-pulse">
+            <BrandLogoIcon size={24} color="#f4ce00" />
+          </span>
           <p className="text-sm font-semibold text-slate-700">
-            Memverifikasi keamanan sesi admin...
+            Memverifikasi keamanan sesi admin Karika Dieng...
           </p>
         </div>
       </div>

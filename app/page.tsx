@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Flaticon } from "@/components/ui/Flaticon";
+import { BrandLogoIcon } from "@/components/ui/BrandLogo";
 
 const heroImage =
   "https://raw.githubusercontent.com/anomalyco/assets/main/dieng-welcome-sign.jpg";
@@ -60,7 +62,79 @@ const featuredProducts = [
   },
 ];
 
+const deliveryStatusText: Record<string, { label: string; color: string }> = {
+  pending: {
+    label: "Menunggu Konfirmasi Toko",
+    color: "bg-amber-100 text-amber-900 border-amber-300",
+  },
+  assigned: {
+    label: "Kurir Ditugaskan",
+    color: "bg-blue-100 text-blue-900 border-blue-300",
+  },
+  picked_up: {
+    label: "Kurir Dalam Perjalanan (Otw Dieng)",
+    color: "bg-purple-100 text-purple-900 border-purple-300",
+  },
+  delivered: {
+    label: "Pesanan Telah Tiba",
+    color: "bg-emerald-100 text-emerald-900 border-emerald-300",
+  },
+  failed_attempt: {
+    label: "Pengantaran Tertunda",
+    color: "bg-rose-100 text-rose-900 border-rose-300",
+  },
+};
+
 export default function HomePage() {
+  const [activeOrder, setActiveOrder] = useState<any | null>(null);
+
+  useEffect(() => {
+    const checkActiveOrder = async () => {
+      try {
+        const raw = localStorage.getItem("karika_active_order");
+        if (!raw) {
+          setActiveOrder(null);
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        if (!parsed.orderId) return;
+
+        // Fetch fresh status from API
+        const res = await fetch(`/api/orders/${encodeURIComponent(parsed.orderId)}`, {
+          cache: "no-store",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.order) {
+            const updated = {
+              orderId: data.order.id,
+              orderNumber: data.order.order_number,
+              customerName: data.order.customer_name,
+              customerPhone: data.order.customer_phone,
+              totalAmount: data.order.total_amount,
+              paymentType: data.order.payment_type,
+              paymentStatus: data.order.payment_status,
+              deliveryStatus: data.order.delivery_status || "pending",
+              updatedAt: new Date().toISOString(),
+            };
+            setActiveOrder(updated);
+            localStorage.setItem("karika_active_order", JSON.stringify(updated));
+            return;
+          }
+        }
+        setActiveOrder(parsed);
+      } catch {}
+    };
+
+    void checkActiveOrder();
+    const interval = setInterval(checkActiveOrder, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const dismissActiveOrder = () => {
+    localStorage.removeItem("karika_active_order");
+    setActiveOrder(null);
+  };
   return (
     <div className="min-h-screen bg-[#f8f7f2] text-[#24251f] selection:bg-[#f4ce00] selection:text-black">
       {/* Top Banner Alert */}
@@ -91,7 +165,7 @@ export default function HomePage() {
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2.5">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#292a23] text-[#f4ce00] shadow-sm">
-                <Flaticon name="sparkles" variant="sr" className="text-xl" />
+                <BrandLogoIcon size={20} color="#f4ce00" />
               </span>
               <div className="flex flex-col">
                 <span className="text-2xl font-black tracking-tight text-[#24251f]">
@@ -129,14 +203,21 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-2.5">
-            <Link href="/orders">
+            <Link href={activeOrder ? `/orders/${activeOrder.orderId}` : "/orders"}>
               <Button
                 variant="outline"
                 size="default"
-                className="rounded-full border-[#d8d5c7] bg-white hover:bg-[#faf9f5] font-bold text-xs sm:text-sm px-4 gap-1.5 text-[#24251f] shadow-2xs"
+                className={`relative rounded-full border font-bold text-xs sm:text-sm px-4 gap-1.5 shadow-2xs transition ${
+                  activeOrder
+                    ? "border-amber-300 bg-amber-100/90 text-amber-900 shadow-xs"
+                    : "border-[#d8d5c7] bg-white text-[#24251f] hover:bg-[#faf9f5]"
+                }`}
               >
                 <Flaticon name="truck-side" className="text-sm text-[#90802a]" />
                 <span className="hidden xs:inline">Pantau</span> Pesanan
+                {activeOrder && (
+                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-ping ml-1" />
+                )}
               </Button>
             </Link>
             <Link href="/catalog">
@@ -152,6 +233,63 @@ export default function HomePage() {
           </div>
         </nav>
       </header>
+
+      {/* ACTIVE ORDER LIVE TRACKING BANNER (Device notification) */}
+      {activeOrder && (
+        <aside aria-label="Status pesanan aktif" className="mx-auto max-w-7xl px-4 pt-4 sm:px-10">
+          <div className="rounded-2xl border-2 border-amber-400/40 bg-gradient-to-r from-[#fffcf2] via-white to-[#fbf9ed] p-4 sm:p-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#f4ce00] px-2.5 py-0.5 text-[11px] font-black text-black">
+                    <Flaticon name="bell-ring" variant="sr" className="text-xs" />
+                    PESANAN AKTIF
+                  </span>
+                  <span className="font-mono text-xs font-bold text-slate-800">
+                    {activeOrder.orderNumber}
+                  </span>
+                  <span
+                    className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${
+                      deliveryStatusText[activeOrder.deliveryStatus || "pending"]?.color ||
+                      "bg-slate-100 text-slate-800 border-slate-200"
+                    }`}
+                  >
+                    {deliveryStatusText[activeOrder.deliveryStatus || "pending"]?.label ||
+                      activeOrder.deliveryStatus}
+                  </span>
+                  {activeOrder.paymentStatus !== "settlement" && (
+                    <span className="rounded-full bg-rose-50 border border-rose-200 px-2 py-0.5 text-[10px] font-bold text-rose-700">
+                      Belum Lunas
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-[#6a685e]">
+                  Pesanan a.n. <strong>{activeOrder.customerName || "Pembeli"}</strong> sedang dipantau langsung dari toko Dieng.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Link href={`/orders/${activeOrder.orderId}`}>
+                  <Button
+                    size="sm"
+                    className="rounded-xl bg-[#292a23] hover:bg-black text-white font-bold text-xs gap-1.5"
+                  >
+                    <Flaticon name="qr" variant="sr" className="text-xs" />
+                    <span>Lihat Detail / Bayar QRIS</span>
+                  </Button>
+                </Link>
+                <button
+                  onClick={dismissActiveOrder}
+                  title="Sembunyikan dari landing page"
+                  className="rounded-xl border border-[#dedad0] bg-white p-2 text-xs text-[#7d7a70] hover:bg-[#f5f2e8]"
+                >
+                  <Flaticon name="cross" className="text-xs" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </aside>
+      )}
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-8 pb-16 sm:pt-14 sm:pb-24">
@@ -728,7 +866,7 @@ export default function HomePage() {
             <div className="lg:col-span-2 space-y-4">
               <Link href="/" className="inline-flex items-center gap-2">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#292a23] text-[#f4ce00] shadow-xs">
-                  <Flaticon name="sparkles" variant="sr" className="text-base" />
+                  <BrandLogoIcon size={18} color="#f4ce00" />
                 </span>
                 <span className="text-2xl font-black tracking-tight text-[#24251f]">
                   KARIKA<span className="text-[#90802a] ml-1">DIENG</span>

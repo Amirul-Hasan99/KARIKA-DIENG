@@ -14,6 +14,11 @@ import { db } from "@/lib/firebase";
 import { Order, OrderStatus } from "@/types";
 import { playKitchenChime } from "@/lib/utils";
 
+const hasRealFirebase = Boolean(
+  process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+  !process.env.NEXT_PUBLIC_FIREBASE_API_KEY.includes("Dummy")
+);
+
 export function useKitchenOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -21,63 +26,65 @@ export function useKitchenOrders() {
   const prevOrderCountRef = useRef<number>(0);
   const knownOrderIdsRef = useRef<Set<string>>(new Set());
 
-  // Firestore real-time listener
+  // Real-time updates via API polling & optional Firestore
   useEffect(() => {
     let unsubscribe: () => void = () => {};
 
-    try {
-      const ordersRef = collection(db, "orders");
-      // Listen for orders
-      const q = query(
-        ordersRef,
-        where("payment_status", "in", ["settlement", "pending"]),
-        orderBy("created_at", "desc")
-      );
+    // Initial load
+    fetchOrdersApi();
 
-      unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const fetchedOrders: Order[] = [];
-          snapshot.forEach((docSnap) => {
-            fetchedOrders.push({
-              ...(docSnap.data() as Order),
-              id: docSnap.id,
+    if (hasRealFirebase) {
+      try {
+        const ordersRef = collection(db, "orders");
+        const q = query(
+          ordersRef,
+          where("payment_status", "in", ["settlement", "pending"]),
+          orderBy("created_at", "desc")
+        );
+
+        unsubscribe = onSnapshot(
+          q,
+          (snapshot) => {
+            const fetchedOrders: Order[] = [];
+            snapshot.forEach((docSnap) => {
+              fetchedOrders.push({
+                ...(docSnap.data() as Order),
+                id: docSnap.id,
+              });
             });
-          });
 
-          // Check if any brand new settlement order arrived
-          let hasNewArrival = false;
-          fetchedOrders.forEach((o) => {
-            if (
-              !knownOrderIdsRef.current.has(o.id) &&
-              o.payment_status === "settlement" &&
-              o.order_status === "received"
-            ) {
-              hasNewArrival = true;
+            // Check if any brand new settlement order arrived
+            let hasNewArrival = false;
+            fetchedOrders.forEach((o) => {
+              if (
+                !knownOrderIdsRef.current.has(o.id) &&
+                o.payment_status === "settlement" &&
+                o.order_status === "received"
+              ) {
+                hasNewArrival = true;
+              }
+              knownOrderIdsRef.current.add(o.id);
+            });
+
+            if (hasNewArrival && soundEnabled && prevOrderCountRef.current > 0) {
+              playKitchenChime();
             }
-            knownOrderIdsRef.current.add(o.id);
-          });
 
-          if (hasNewArrival && soundEnabled && prevOrderCountRef.current > 0) {
-            playKitchenChime();
+            prevOrderCountRef.current = fetchedOrders.length;
+            setOrders(fetchedOrders);
+            setIsLoading(false);
+          },
+          () => {
+            fetchOrdersApi();
           }
-
-          prevOrderCountRef.current = fetchedOrders.length;
-          setOrders(fetchedOrders);
-          setIsLoading(false);
-        },
-        (error) => {
-          console.warn("Firestore kitchen subscription warning:", error);
-          fetchOrdersApi();
-        }
-      );
-    } catch (e) {
-      console.warn("Firestore setup warning:", e);
-      fetchOrdersApi();
+        );
+      } catch (e) {
+        fetchOrdersApi();
+      }
     }
 
-    // Polling fallback every 4 seconds
-    const interval = setInterval(fetchOrdersApi, 4000);
+    // Polling interval every 2.5 seconds for instant real-time synchronization
+    const interval = setInterval(fetchOrdersApi, 2500);
 
     async function fetchOrdersApi() {
       try {
@@ -136,15 +143,17 @@ export function useKitchenOrders() {
         console.warn("API PATCH order status warning:", apiErr);
       }
 
-      // Also update Firestore client if connected
-      try {
-        const docRef = doc(db, "orders", orderId);
-        await updateDoc(docRef, {
-          order_status: nextStatus,
-          updated_at: new Date().toISOString(),
-        });
-      } catch (e) {
-        // silent catch
+      // Also update Firestore client only if real Firebase is configured
+      if (hasRealFirebase) {
+        try {
+          const docRef = doc(db, "orders", orderId);
+          await updateDoc(docRef, {
+            order_status: nextStatus,
+            updated_at: new Date().toISOString(),
+          });
+        } catch (e) {
+          // silent catch
+        }
       }
     },
     []

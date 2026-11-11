@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { BrandLogoIcon } from "@/components/ui/BrandLogo";
 import { useKitchenOrders } from "@/hooks/useKitchenOrders";
 import { Order, OrderStatus, MenuItem, Category } from "@/types";
 import { formatOrderTime, formatRupiah } from "@/lib/utils";
@@ -32,6 +33,7 @@ import {
   Package,
   Layers,
   Calendar,
+  MapPin,
 } from "@/components/ui/FlaticonCompat";
 import Flaticon from "@/components/ui/Flaticon";
 import { KarikaProduct, INITIAL_KARIKA_PRODUCTS, KARIKA_CATEGORIES } from "@/lib/karika-products-data";
@@ -46,7 +48,7 @@ export default function AdminDashboardPage() {
     playChime,
   } = useKitchenOrders();
 
-  const [activeTab, setActiveTab] = useState<"kds" | "cash" | "transactions" | "stock">("kds");
+  const [activeTab, setActiveTab] = useState<"kds" | "transactions" | "stock">("kds");
   const [kdsFilter, setKdsFilter] = useState<"all" | "received" | "cooking" | "ready" | "completed">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -191,21 +193,24 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Filtered orders for KDS
+  // Filtered orders for Antrean Pesanan Oleh-Oleh
   const kdsOrders = useMemo(() => {
     return orders.filter((order) => {
-      if (order.payment_status !== "settlement") return false;
+      // Show all active orders that are not failed / cancelled
+      if (order.payment_status === "failed") return false;
 
       const matchTab =
         kdsFilter === "all"
           ? order.order_status !== "completed"
           : order.order_status === kdsFilter;
 
+      const q = searchQuery.trim().toLowerCase();
       const matchSearch =
-        searchQuery === "" ||
-        order.table_number.includes(searchQuery) ||
-        order.order_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (order.customer_name && order.customer_name.toLowerCase().includes(searchQuery.toLowerCase()));
+        q === "" ||
+        order.order_number.toLowerCase().includes(q) ||
+        (order.customer_name && order.customer_name.toLowerCase().includes(q)) ||
+        (order.customer_phone && order.customer_phone.includes(q)) ||
+        (order.delivery_address && order.delivery_address.toLowerCase().includes(q));
 
       return matchTab && matchSearch;
     });
@@ -300,13 +305,13 @@ export default function AdminDashboardPage() {
   }, [settledOrders]);
 
   const counts = useMemo(() => {
-    const allSettled = orders.filter((o) => o.payment_status === "settlement");
+    const validOrders = orders.filter((o) => o.payment_status !== "failed");
     return {
-      allActive: allSettled.filter((o) => o.order_status !== "completed").length,
-      received: allSettled.filter((o) => o.order_status === "received").length,
-      cooking: allSettled.filter((o) => o.order_status === "cooking").length,
-      ready: allSettled.filter((o) => o.order_status === "ready").length,
-      completed: allSettled.filter((o) => o.order_status === "completed").length,
+      allActive: validOrders.filter((o) => o.order_status !== "completed").length,
+      received: validOrders.filter((o) => o.order_status === "received").length,
+      cooking: validOrders.filter((o) => o.order_status === "cooking").length,
+      ready: validOrders.filter((o) => o.order_status === "ready").length,
+      completed: validOrders.filter((o) => o.order_status === "completed").length,
     };
   }, [orders]);
 
@@ -327,19 +332,19 @@ export default function AdminDashboardPage() {
       case "cooking":
         return (
           <span className="inline-flex items-center gap-1 rounded-md bg-sky-100 px-2 py-0.5 text-[11px] font-bold text-sky-800 border border-sky-300">
-            <Coffee className="h-3 w-3" strokeWidth={2} /> Sedang Diseduh / Dimasak
+            <Package className="h-3 w-3" strokeWidth={2} /> Sedang Dikemas
           </span>
         );
       case "ready":
         return (
           <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 border border-emerald-300">
-            <CheckCircle2 className="h-3 w-3" strokeWidth={2} /> Siap Disajikan
+            <CheckCircle2 className="h-3 w-3" strokeWidth={2} /> Siap Kirim Kurir
           </span>
         );
       case "completed":
         return (
           <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 border border-slate-200">
-            Selesai
+            Selesai / Terantar
           </span>
         );
     }
@@ -348,11 +353,11 @@ export default function AdminDashboardPage() {
   const getNextAction = (current: OrderStatus): { next: OrderStatus; label: string; color: string } | null => {
     switch (current) {
       case "received":
-        return { next: "cooking", label: "1. Mulai Seduh & Masak", color: "bg-sky-600 hover:bg-sky-700 text-white" };
+        return { next: "cooking", label: "1. Mulai Kemas & Packing", color: "bg-sky-600 hover:bg-sky-700 text-white" };
       case "cooking":
-        return { next: "ready", label: "2. Pesanan Jadi (Siap Diambil)", color: "bg-emerald-600 hover:bg-emerald-700 text-white" };
+        return { next: "ready", label: "2. Kemas Selesai (Siap Antar)", color: "bg-emerald-600 hover:bg-emerald-700 text-white" };
       case "ready":
-        return { next: "completed", label: "3. Selesaikan Pesanan", color: "bg-slate-800 hover:bg-slate-900 text-white" };
+        return { next: "completed", label: "3. Selesaikan Pengiriman", color: "bg-slate-800 hover:bg-slate-900 text-white" };
       default:
         return null;
     }
@@ -361,14 +366,15 @@ export default function AdminDashboardPage() {
   // CSV Export
   const handleExportCSV = () => {
     const headers = [
-      "No Pesanan",
-      "Meja",
-      "Pelanggan",
-      "Waktu",
+      "No. Order",
+      "Tujuan Pengantaran",
+      "Titik Maps",
+      "Pelanggan / Kontak",
+      "Waktu Pemesanan",
       "Status Bayar",
       "Metode Pembayaran",
       "Total (IDR)",
-      "Rincian Item",
+      "Rincian Paket Oleh-Oleh",
     ];
 
     const rows = settledOrders.map((o) => {
@@ -376,10 +382,12 @@ export default function AdminDashboardPage() {
         .map((i) => `${i.qty}x ${i.name}`)
         .join("; ")
         .replace(/"/g, '""');
+      const mapsCoords = o.coordinates ? `${o.coordinates.lat},${o.coordinates.lng}` : "-";
       return [
         `"${o.order_number}"`,
-        `"Meja ${o.table_number}"`,
-        `"${(o.customer_name || "Pelanggan").replace(/"/g, '""')}"`,
+        `"${(o.delivery_address || `Pengantaran Radius ${o.delivery_distance_km || 8} km`).replace(/"/g, '""')}"`,
+        `"${mapsCoords}"`,
+        `"${(o.customer_name || "Pelanggan").replace(/"/g, '""')} (${o.customer_phone || "-"})"`,
         `"${new Date(o.created_at).toLocaleString("id-ID")}"`,
         `"${o.payment_status}"`,
         `"${o.payment_type || "digital"}"`,
@@ -419,7 +427,7 @@ export default function AdminDashboardPage() {
               className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#292a23] to-[#454639] text-[#f4ce00] shadow-md shadow-black/10 hover:opacity-95 transition"
               title="Karika Dieng — Beranda"
             >
-              <Flaticon name="sparkles" variant="sr" className="text-xl text-[#f4ce00]" />
+              <BrandLogoIcon size={24} color="#f4ce00" />
             </Link>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
@@ -516,24 +524,9 @@ export default function AdminDashboardPage() {
             </span>
           </div>
 
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-800">Menunggu Bayar Kasir</span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 font-bold text-sm">
-                💵
-              </div>
-            </div>
-            <p className="mt-2 text-xl sm:text-2xl font-black text-emerald-950">
-              {cashPendingOrders.length}
-            </p>
-            <span className="text-[10px] text-emerald-700 mt-0.5 block">
-              Perlu konfirmasi kasir
-            </span>
-          </div>
-
           <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 shadow-2xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-amber-800">Pesanan Baru Dapur</span>
+              <span className="text-xs font-bold text-amber-800">Pesanan Baru Masuk</span>
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
                 <AlertCircle className="h-4 w-4" />
               </div>
@@ -542,22 +535,37 @@ export default function AdminDashboardPage() {
               {counts.received}
             </p>
             <span className="text-[10px] text-amber-700 mt-0.5 block">
-              Menunggu diseduh / dimasak
+              Menunggu diproses toko
             </span>
           </div>
 
           <div className="rounded-2xl border border-sky-200 bg-sky-50/50 p-4 shadow-2xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-sky-800">Sedang Diproses</span>
+              <span className="text-xs font-bold text-sky-800">Sedang Dikemas</span>
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
-                <Coffee className="h-4 w-4" />
+                <Package className="h-4 w-4" />
               </div>
             </div>
             <p className="mt-2 text-xl sm:text-2xl font-black text-sky-900">
               {counts.cooking}
             </p>
             <span className="text-[10px] text-sky-700 mt-0.5 block">
-              Barista &amp; dapur sedang meracik
+              Proses packing oleh-oleh
+            </span>
+          </div>
+
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-emerald-800">Siap Kirim Kurir</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                <CheckCircle2 className="h-4 w-4" />
+              </div>
+            </div>
+            <p className="mt-2 text-xl sm:text-2xl font-black text-emerald-950">
+              {counts.ready}
+            </p>
+            <span className="text-[10px] text-emerald-700 mt-0.5 block">
+              Siap menuju lokasi pembeli
             </span>
           </div>
         </div>
@@ -573,27 +581,11 @@ export default function AdminDashboardPage() {
                   : "text-slate-600 hover:bg-slate-100"
               }`}
             >
-              <ChefHat className="h-4 w-4" />
-              <span>Antrean Dapur</span>
+              <Package className="h-4 w-4" />
+              <span>Antrean Pesanan</span>
               <span className="rounded-full bg-amber-500 px-1.5 py-0.2 text-[10px] text-white">
                 {counts.allActive}
               </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("cash")}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition whitespace-nowrap ${
-                activeTab === "cash"
-                  ? "bg-emerald-700 text-white shadow-xs"
-                  : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              <span>💵 Bayar Kasir</span>
-              {cashPendingOrders.length > 0 && (
-                <span className="rounded-full bg-rose-500 px-1.5 py-0.2 text-[10px] text-white animate-pulse font-black">
-                  {cashPendingOrders.length}
-                </span>
-              )}
             </button>
 
             <button
@@ -629,20 +621,20 @@ export default function AdminDashboardPage() {
 
           {/* Search Box */}
           {activeTab !== "stock" && (
-            <div className="relative w-full sm:w-64">
+            <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari meja / no. order..."
+                placeholder="Cari no. order / nama pembeli / no. WA..."
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-3 text-xs focus:bg-white focus:border-amber-500 focus:outline-none"
               />
             </div>
           )}
         </div>
 
-        {/* View 1: Kitchen Display System (KDS) */}
+        {/* View 1: Order & Delivery Queue (Antrean Pesanan Oleh-Oleh) */}
         {activeTab === "kds" && (
           <div>
             {/* Status Filter Chips */}
@@ -650,9 +642,9 @@ export default function AdminDashboardPage() {
               {[
                 { id: "all", label: "Semua Pesanan Aktif", count: counts.allActive },
                 { id: "received", label: "Pesanan Baru", count: counts.received },
-                { id: "cooking", label: "Sedang Diseduh / Dimasak", count: counts.cooking },
-                { id: "ready", label: "Siap Disajikan", count: counts.ready },
-                { id: "completed", label: "Riwayat Selesai", count: counts.completed },
+                { id: "cooking", label: "Sedang Dikemas", count: counts.cooking },
+                { id: "ready", label: "Siap Kirim Kurir", count: counts.ready },
+                { id: "completed", label: "Riwayat Terkirim", count: counts.completed },
               ].map((chip) => (
                 <button
                   key={chip.id}
@@ -681,11 +673,11 @@ export default function AdminDashboardPage() {
             ) : kdsOrders.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 mb-3">
-                  <ChefHat className="h-6 w-6" />
+                  <Package className="h-6 w-6" />
                 </div>
                 <h3 className="text-sm font-bold text-slate-800">Tidak ada antrean pesanan aktif</h3>
                 <p className="text-xs text-slate-500 max-w-xs mt-1">
-                  Pesanan baru yang telah lunas akan otomatis muncul di sini.
+                  Pesanan oleh-oleh baru dari pembeli akan otomatis muncul di sini secara real-time.
                 </p>
               </div>
             ) : (
@@ -702,26 +694,94 @@ export default function AdminDashboardPage() {
                       <div>
                         {/* Card Header */}
                         <div className="flex items-start justify-between border-b border-slate-100 pb-3">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg font-black text-slate-900">
-                                MEJA {order.table_number}
+                          <div className="space-y-1 w-full">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-base font-black text-slate-900">
+                                ORDER #{order.order_number}
                               </span>
-                              {getStatusBadge(order.order_status)}
+                              <div className="flex items-center gap-1.5">
+                                {getStatusBadge(order.order_status)}
+                                <span
+                                  className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                                    order.payment_status === "settlement"
+                                      ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                      : "bg-amber-50 text-amber-800 border border-amber-300"
+                                  }`}
+                                >
+                                  {order.payment_status === "settlement" ? "Lunas" : "Belum Lunas"}
+                                </span>
+                              </div>
                             </div>
-                            <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-500">
-                              <span className="font-mono text-slate-600 font-bold">
-                                {order.order_number}
-                              </span>
-                              <span>•</span>
+
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500">
                               <span>{formatOrderTime(order.created_at)}</span>
                               <span>•</span>
                               <span className="text-amber-700 font-bold">
                                 {elapsedMinutes} mnt lalu
                               </span>
+                              <span>•</span>
+                              <span className="uppercase">{order.payment_type || "QRIS"}</span>
                             </div>
-                            <div className="mt-1 text-xs text-slate-700">
-                              Pemesan: <strong>{order.customer_name || "Pelanggan"}</strong>
+
+                            <div className="text-xs text-slate-700 pt-0.5">
+                              Pemesan: <strong>{order.customer_name || "Pelanggan"}</strong>{" "}
+                              {order.customer_phone && (
+                                <span className="text-slate-500 font-mono">({order.customer_phone})</span>
+                              )}
+                            </div>
+
+                            {/* Alamat & Titik Maps Terintegrasi (Real Input Google Maps & Detail Tambahan) */}
+                            <div className="mt-2.5 rounded-xl border border-amber-200/90 bg-[#fffdf7] p-3 text-xs space-y-2 shadow-2xs">
+                              {/* 1. Titik Google Maps Pasti */}
+                              <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-amber-100 pb-2">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                  <span className="font-bold text-slate-800">Titik Pasti Kurir (Google Maps):</span>
+                                </div>
+                                {order.coordinates ? (
+                                  <a
+                                    href={`https://www.google.com/maps/dir/?api=1&destination=${order.coordinates.lat},${order.coordinates.lng}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2.5 py-1 rounded-lg inline-flex items-center gap-1 transition"
+                                  >
+                                    <span>🧭 Buka Rute Kurir ({order.coordinates.lat.toFixed(5)}, {order.coordinates.lng.toFixed(5)})</span>
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                ) : (
+                                  <span className="text-[11px] text-slate-400">Koordinat tidak tersedia</span>
+                                )}
+                              </div>
+
+                              {/* 2. Detail Patokan Alamat Real dari Form Checkout */}
+                              <div className="space-y-0.5">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                  Patokan / Alamat Tambahan Pembeli:
+                                </span>
+                                <p className="font-semibold text-slate-900 bg-white p-2 rounded-lg border border-slate-200/80 leading-relaxed">
+                                  {order.delivery_address && order.delivery_address.trim() !== ""
+                                    ? order.delivery_address
+                                    : "Tidak ada catatan patokan tambahan."}
+                                </p>
+                              </div>
+
+                              {/* 3. Estimasi Jarak & WhatsApp Kontak Langsung */}
+                              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] text-slate-600">
+                                <span>
+                                  Jarak Tempuh: <strong className="text-slate-900">{order.delivery_distance_km ? `~${order.delivery_distance_km} km` : "Radius 8 km"}</strong> dari Toko Dieng
+                                </span>
+                                {order.customer_phone && (
+                                  <a
+                                    href={`https://wa.me/${order.customer_phone.replace(/\D/g, "").replace(/^0/, "62")}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="font-bold text-emerald-700 hover:text-emerald-900 inline-flex items-center gap-1 hover:underline"
+                                  >
+                                    <span>Chat WA Pembeli</span>
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -761,11 +821,21 @@ export default function AdminDashboardPage() {
                       {/* Card Footer */}
                       <div className="pt-3 border-t border-slate-100 space-y-2">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="font-medium text-slate-500">Total Pembayaran:</span>
+                          <span className="font-medium text-slate-500">Total Tagihan:</span>
                           <span className="font-black text-amber-600 text-sm">
                             {formatRupiah(order.total_amount)}
                           </span>
                         </div>
+
+                        {order.payment_status !== "settlement" && (
+                          <button
+                            onClick={() => handleConfirmCash(order.id)}
+                            className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 text-xs font-bold transition shadow-xs"
+                          >
+                            <Check className="h-3.5 w-3.5 stroke-[3]" />
+                            <span>Konfirmasi Pembayaran Lunas</span>
+                          </button>
+                        )}
 
                         <div className="flex items-center gap-2">
                           <button
@@ -798,97 +868,6 @@ export default function AdminDashboardPage() {
                     </div>
                   );
                 })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* View 2: Cash Pending Orders (Bayar Tunai di Kasir) */}
-        {activeTab === "cash" && (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-emerald-950">
-                  Pesanan Menunggu Pembayaran Tunai
-                </h3>
-                <p className="text-xs text-emerald-800">
-                  Pelanggan memilih bayar di kasir. Begitu uang diterima, klik tombol <strong>&ldquo;Konfirmasi Bayar Tunai&rdquo;</strong> untuk meneruskan pesanan ke antrean barista.
-                </p>
-              </div>
-            </div>
-
-            {cashPendingOrders.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
-                <div className="text-3xl mb-2">💵</div>
-                <h3 className="text-sm font-bold text-slate-800">Tidak ada tagihan tunai pending</h3>
-                <p className="text-xs text-slate-500 max-w-xs mt-1">
-                  Saat pelanggan di meja memilih metode &ldquo;Bayar di Kasir&rdquo;, pesanan akan muncul di sini.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {cashPendingOrders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="flex flex-col justify-between rounded-2xl border-2 border-emerald-300 bg-white p-4 shadow-sm"
-                  >
-                    <div>
-                      <div className="flex items-start justify-between border-b border-slate-100 pb-3">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg font-black text-slate-900">
-                              MEJA {order.table_number}
-                            </span>
-                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                              Menunggu Bayar
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-500 mt-1">
-                            No. Order: <strong className="font-mono text-slate-800">{order.order_number}</strong>
-                          </p>
-                          <p className="text-xs text-slate-700">
-                            Pemesan: <strong>{order.customer_name || "Pelanggan"}</strong>
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="py-3 space-y-1.5">
-                        {order.items.map((item, idx) => (
-                          <div key={idx} className="flex justify-between text-xs text-slate-800">
-                            <span>{item.qty}x {item.name}</span>
-                            <span className="font-bold">{formatRupiah(item.subtotal)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-slate-100 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500">Jumlah yang harus dibayar:</span>
-                        <span className="text-base font-black text-emerald-700">
-                          {formatRupiah(order.total_amount)}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2 pt-1">
-                        <button
-                          onClick={() => handleCancelOrder(order.id)}
-                          className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-100 transition"
-                          title="Batalkan"
-                        >
-                          Batalkan
-                        </button>
-                        <button
-                          onClick={() => handleConfirmCash(order.id)}
-                          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2.5 px-4 text-xs font-black text-white hover:bg-emerald-700 active:scale-98 transition shadow-xs"
-                        >
-                          <Check className="h-4 w-4 stroke-[3]" />
-                          <span>Konfirmasi Bayar Tunai (Lunas)</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
               </div>
             )}
           </div>
@@ -1042,12 +1021,12 @@ export default function AdminDashboardPage() {
                   <tr>
                     <th className="px-4 py-3">No. Order</th>
                     <th className="px-4 py-3">Waktu</th>
-                    <th className="px-4 py-3">Meja</th>
-                    <th className="px-4 py-3">Pemesan</th>
+                    <th className="px-4 py-3">Tujuan &amp; Titik Maps</th>
+                    <th className="px-4 py-3">Pemesan &amp; WhatsApp</th>
                     <th className="px-4 py-3">Metode</th>
                     <th className="px-4 py-3">Item Pesanan</th>
                     <th className="px-4 py-3">Total Nominal</th>
-                    <th className="px-4 py-3">Status Masak</th>
+                    <th className="px-4 py-3">Status Pengiriman</th>
                     <th className="px-4 py-3 text-right">Aksi</th>
                   </tr>
                 </thead>
@@ -1064,14 +1043,34 @@ export default function AdminDashboardPage() {
                         <td className="px-4 py-3 font-mono font-bold text-slate-900">
                           {order.order_number}
                         </td>
-                        <td className="px-4 py-3 text-slate-500">
+                        <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
                           {formatOrderTime(order.created_at)}
                         </td>
-                        <td className="px-4 py-3 font-bold text-slate-900">
-                          Meja {order.table_number}
+                        <td className="px-4 py-3 max-w-xs">
+                          <p className="font-semibold text-slate-900 text-xs">
+                            {order.delivery_address || `Pengantaran Dieng (Radius 8 km)`}
+                          </p>
+                          {order.coordinates ? (
+                            <a
+                              href={`https://www.google.com/maps/dir/?api=1&destination=${order.coordinates.lat},${order.coordinates.lng}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[10px] text-amber-700 hover:underline font-bold inline-flex items-center gap-0.5 mt-0.5"
+                            >
+                              <span>Buka Maps ({order.coordinates.lat.toFixed(4)}, {order.coordinates.lng.toFixed(4)})</span>
+                              <ExternalLink className="h-2.5 w-2.5" />
+                            </a>
+                          ) : (
+                            <span className="text-[10px] text-slate-400">Titik Kawasan Dieng</span>
+                          )}
                         </td>
-                        <td className="px-4 py-3 text-slate-800 font-medium">
-                          {order.customer_name || "-"}
+                        <td className="px-4 py-3 text-slate-800">
+                          <span className="font-semibold block">{order.customer_name || "-"}</span>
+                          {order.customer_phone && (
+                            <span className="text-[11px] text-slate-500 font-mono">
+                              {order.customer_phone}
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <span

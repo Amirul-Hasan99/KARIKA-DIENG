@@ -9,7 +9,7 @@ export interface PrintOptions {
 }
 
 /**
- * Formats order details into a clean ESC/POS text representation
+ * Formats order details into a clean ESC/POS text representation for thermal printers
  */
 export function formatReceiptText(order: Order, options?: PrintOptions): string {
   const width = options?.paperWidth === "80mm" ? 48 : 32;
@@ -31,18 +31,26 @@ export function formatReceiptText(order: Order, options?: PrintOptions): string 
   const lines: string[] = [];
 
   // Header
-  lines.push(center(options?.storeName || "KOPI & SNACK COFFEE BAR"));
-  lines.push(center(options?.storeAddress || "Order & Self-Service System"));
+  lines.push(center(options?.storeName || "KARIKA DIENG"));
+  lines.push(center(options?.storeAddress || "Sentra Oleh-Oleh Wonosobo & Dieng"));
+  lines.push(center("Titik 0 Km Dieng · WA: 083122046357"));
   lines.push(doubleDivider);
 
   // Metadata
-  lines.push(justify(`No: ${order.order_number}`, `Meja: ${order.table_number}`));
-  if (order.customer_id) {
-    lines.push(justify(`ID Pembeli:`, order.customer_id));
+  lines.push(justify(`No. Order:`, order.order_number));
+  lines.push(justify(`Pengantaran:`, order.delivery_distance_km ? `${order.delivery_distance_km} km` : "Radius 8 km"));
+  if (order.customer_name) {
+    lines.push(justify(`Penerima:`, order.customer_name));
+  }
+  if (order.customer_phone) {
+    lines.push(justify(`WhatsApp:`, order.customer_phone));
   }
   lines.push(justify(`Waktu:`, formatOrderTime(order.created_at)));
-  if (order.customer_name) {
-    lines.push(justify(`Pelanggan:`, order.customer_name));
+  if (order.delivery_address) {
+    lines.push(`Patokan: ${order.delivery_address}`);
+  }
+  if (order.coordinates) {
+    lines.push(`Titik Maps: ${order.coordinates.lat.toFixed(5)}, ${order.coordinates.lng.toFixed(5)}`);
   }
   lines.push(divider);
 
@@ -50,8 +58,7 @@ export function formatReceiptText(order: Order, options?: PrintOptions): string 
   for (const item of order.items) {
     const itemTotal = formatRupiah(item.subtotal);
     lines.push(justify(`${item.qty}x ${item.name}`, itemTotal));
-    
-    // Modifiers / Spice Level
+
     if (item.selected_modifiers && item.selected_modifiers.length > 0) {
       for (const mod of item.selected_modifiers) {
         const modPrice = mod.price_modifier > 0 ? ` (+${formatRupiah(mod.price_modifier)})` : "";
@@ -60,23 +67,23 @@ export function formatReceiptText(order: Order, options?: PrintOptions): string 
     }
 
     if (item.notes) {
-      lines.push(`   Note: ${item.notes}`);
+      lines.push(`   Catatan: ${item.notes}`);
     }
   }
 
   lines.push(divider);
 
   // Total & Payment
-  lines.push(justify("TOTAL:", formatRupiah(order.total_amount)));
+  lines.push(justify("TOTAL TAGIHAN:", formatRupiah(order.total_amount)));
   lines.push(justify("Status Bayar:", order.payment_status.toUpperCase()));
   if (order.payment_type) {
-    lines.push(justify("Metode Bayar:", order.payment_type.toUpperCase()));
+    lines.push(justify("Metode:", order.payment_type.toUpperCase()));
   }
   lines.push(doubleDivider);
 
   // Footer
-  lines.push(center(options?.footerNote || "TERIMA KASIH ATAS KUNJUNGANNYA"));
-  lines.push(center("Simpan struk ini sebagai bukti pemesanan"));
+  lines.push(center(options?.footerNote || "MATUR NUWUN / TERIMA KASIH"));
+  lines.push(center("Oleh-Oleh Khas Dataran Tinggi Dieng"));
   lines.push("\n\n");
 
   return lines.join("\n");
@@ -92,10 +99,6 @@ export function generateEscPosBuffer(order: Order, options?: PrintOptions): Uint
   const ESC = 0x1b;
   const GS = 0x1d;
 
-  // ESC/POS Initialization Commands:
-  // [ESC, '@'] -> Initialize printer
-  // [ESC, 'a', 1] -> Center align
-  // [GS, 'V', 66, 0] -> Cut paper (partial cut)
   const initCmd = new Uint8Array([ESC, 0x40]);
   const cutCmd = new Uint8Array([ESC, 0x64, 0x03, GS, 0x56, 0x42, 0x00]);
 
@@ -125,7 +128,7 @@ export function printReceiptViaBrowser(order: Order, options?: PrintOptions) {
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Receipt ${order.order_number}</title>
+        <title>Struk Pesanan ${order.order_number}</title>
         <style>
           @page {
             size: auto;
@@ -151,13 +154,17 @@ export function printReceiptViaBrowser(order: Order, options?: PrintOptions) {
         </style>
       </head>
       <body>
-        <div class="center bold" style="font-size: 14px;">${options?.storeName || "KATALOG MENU"}</div>
-        <div class="center">${options?.storeAddress || "Self-Order Dining System"}</div>
+        <div class="center bold" style="font-size: 13px;">${options?.storeName || "KARIKA DIENG"}</div>
+        <div class="center" style="font-size: 10px;">${options?.storeAddress || "Sentra Oleh-Oleh Khas Dieng Wonosobo"}</div>
+        <div class="center" style="font-size: 9px;">Titik 0 Km Dieng · Layanan Antar 8 km</div>
         <div class="double-divider"></div>
         
-        <div class="row"><span>No: ${order.order_number}</span><span class="bold">Meja: ${order.table_number}</span></div>
+        <div class="row"><span class="bold">Order: #${order.order_number}</span><span>${order.delivery_distance_km ? `${order.delivery_distance_km} km` : "Dieng"}</span></div>
         <div class="row"><span>Waktu:</span><span>${formatOrderTime(order.created_at)}</span></div>
-        ${order.customer_name ? `<div class="row"><span>Customer:</span><span>${order.customer_name}</span></div>` : ""}
+        ${order.customer_name ? `<div class="row"><span>Penerima:</span><span class="bold">${order.customer_name}</span></div>` : ""}
+        ${order.customer_phone ? `<div class="row"><span>WhatsApp:</span><span>${order.customer_phone}</span></div>` : ""}
+        ${order.delivery_address ? `<div style="font-size: 10px; margin-top: 2px;"><strong>Patokan Alamat:</strong> ${order.delivery_address}</div>` : ""}
+        ${order.coordinates ? `<div style="font-size: 9px; color: #444;">Titik Maps: ${order.coordinates.lat.toFixed(5)}, ${order.coordinates.lng.toFixed(5)}</div>` : ""}
         <div class="divider"></div>
 
         ${order.items
@@ -179,7 +186,7 @@ export function printReceiptViaBrowser(order: Order, options?: PrintOptions) {
                   .join("")
               : ""
           }
-          ${item.notes ? `<div class="mod-item">Note: ${item.notes}</div>` : ""}
+          ${item.notes ? `<div class="mod-item">Catatan: ${item.notes}</div>` : ""}
         `
           )
           .join("")}
@@ -191,7 +198,7 @@ export function printReceiptViaBrowser(order: Order, options?: PrintOptions) {
         </div>
         <div class="row">
           <span>Status Bayar:</span>
-          <span class="bold">${order.payment_status.toUpperCase()}</span>
+          <span class="bold">${order.payment_status === "settlement" ? "LUNAS" : "BELUM LUNAS"}</span>
         </div>
         ${
           order.payment_type
@@ -200,8 +207,8 @@ export function printReceiptViaBrowser(order: Order, options?: PrintOptions) {
         }
         <div class="double-divider"></div>
         <div class="center" style="font-size: 10px; margin-top: 6px;">
-          ${options?.footerNote || "TERIMA KASIH ATAS KUNJUNGAN ANDA"}<br/>
-          Harap simpan bukti pembayaran ini.
+          ${options?.footerNote || "MATUR NUWUN / TERIMA KASIH"}<br/>
+          Pusat Pengantaran Oleh-Oleh Dieng
         </div>
       </body>
     </html>

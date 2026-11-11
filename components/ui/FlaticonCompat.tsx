@@ -54,4 +54,5 @@ export const Flame = createFlaticonWrapper("flame");
 export const Receipt = createFlaticonWrapper("receipt");
 export const Loader2 = createFlaticonWrapper("spinner");
 export const Cookie = createFlaticonWrapper("cookie");
+export const MapPin = createFlaticonWrapper("marker");
 

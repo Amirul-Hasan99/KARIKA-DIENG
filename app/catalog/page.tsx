@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import confetti from "canvas-confetti";
 import DeliveryLocationPicker from "@/components/customer/DeliveryLocationPicker";
 import { Flaticon } from "@/components/ui/Flaticon";
+import { BrandLogoIcon } from "@/components/ui/BrandLogo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -19,6 +20,10 @@ interface ActiveOrderState {
   orderNumber: string;
   customerName?: string;
   customerPhone?: string;
+  address?: string;
+  coordinates?: { lat: number; lng: number };
+  deliveryDistanceKm?: number;
+  items?: any[];
   totalAmount?: number;
   paymentType?: string;
   paymentStatus?: string;
@@ -142,6 +147,10 @@ export default function CatalogPage() {
               orderNumber: data.order.order_number,
               customerName: data.order.customer_name,
               customerPhone: data.order.customer_phone,
+              address: data.order.delivery_address || parsed.address,
+              coordinates: data.order.coordinates || parsed.coordinates,
+              deliveryDistanceKm: data.order.delivery_distance_km ?? parsed.deliveryDistanceKm,
+              items: data.order.items || parsed.items,
               totalAmount: data.order.total_amount,
               paymentType: data.order.payment_type,
               paymentStatus: data.order.payment_status,
@@ -217,6 +226,9 @@ export default function CatalogPage() {
         orderNumber: data.orderNumber,
         customerName: String(f.get("name")),
         customerPhone: String(f.get("phone")),
+        address: String(f.get("address")),
+        coordinates: { lat, lng },
+        deliveryDistanceKm: Number(data.deliveryDistanceKm || 0),
         totalAmount: total,
         paymentType: payment,
         paymentStatus: "pending",
@@ -253,7 +265,7 @@ export default function CatalogPage() {
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#292a23] text-[#f4ce00] shadow-xs">
-                <Flaticon name="sparkles" variant="sr" className="text-sm" />
+                <BrandLogoIcon size={16} color="#f4ce00" />
               </span>
               <span className="text-xl font-black tracking-tight text-[#24251f]">
                 KARIKA<span className="text-[#90802a] ml-1">DIENG</span>
@@ -720,32 +732,75 @@ export default function CatalogPage() {
                   <span className="text-xl text-[#938126]">{rupiah(total)}</span>
                 </div>
 
-                <form className="mt-5 space-y-3.5" onSubmit={submitOrder}>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <input
-                      name="name"
+                <form className="mt-5 space-y-4" onSubmit={submitOrder}>
+                  {/* Step 1: Info Pembeli */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[#63625b] mb-1.5">
+                      Kontak Pemesan
+                    </label>
+                    <div className="grid gap-2.5 sm:grid-cols-2">
+                      <input
+                        name="name"
+                        required
+                        minLength={2}
+                        placeholder="Nama Lengkap Pembeli"
+                        className="h-11 rounded-xl border border-[#dedbd0] px-3.5 text-sm outline-none focus:border-[#b69b00] bg-[#faf9f5]"
+                      />
+                      <input
+                        name="phone"
+                        required
+                        minLength={9}
+                        placeholder="Nomor WhatsApp (08...)"
+                        className="h-11 rounded-xl border border-[#dedbd0] px-3.5 text-sm outline-none focus:border-[#b69b00] bg-[#faf9f5]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Step 2: Titik Maps Terintegrasi (Alamat Pasti) */}
+                  <div className="rounded-2xl border border-amber-200/90 bg-[#fffdf5] p-3.5 shadow-xs">
+                    <div className="mb-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#f4ce00] text-[11px] font-black text-black">
+                          1
+                        </span>
+                        <p className="text-xs font-bold uppercase tracking-wider text-[#63530f]">
+                          Titik Pasti Pengantaran (Google Maps)
+                        </p>
+                      </div>
+                      <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-200">
+                        Wajib · Koordinat Akurat
+                      </span>
+                    </div>
+                    <p className="mb-2.5 text-[11px] text-[#7a7457] leading-relaxed">
+                      Geser atau ketuk peta di bawah agar kurir Karika Dieng sampai tepat di lokasi Anda.
+                    </p>
+
+                    <DeliveryLocationPicker />
+                  </div>
+
+                  {/* Step 3: Detail Alamat Tambahan / Patokan */}
+                  <div className="rounded-2xl border border-[#dedbd0] bg-white p-3.5">
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#292a23] text-[11px] font-bold text-white">
+                          2
+                        </span>
+                        <p className="text-xs font-bold uppercase tracking-wider text-[#57564f]">
+                          Detail Patokan Tambahan (Pendukung)
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-[#88877e]">
+                        Keterangan homestay/ruangan
+                      </span>
+                    </div>
+                    <textarea
+                      name="address"
                       required
-                      minLength={2}
-                      placeholder="Nama Penerima"
-                      className="h-11 rounded-xl border border-[#dedbd0] px-3.5 text-sm outline-none focus:border-[#b69b00]"
-                    />
-                    <input
-                      name="phone"
-                      required
-                      minLength={9}
-                      placeholder="Nomor WhatsApp (08...)"
-                      className="h-11 rounded-xl border border-[#dedbd0] px-3.5 text-sm outline-none focus:border-[#b69b00]"
+                      minLength={5}
+                      placeholder="Contoh: Homestay Dieng Pass Lt. 2 kamar No. 5, atau di samping gapura desa..."
+                      className="min-h-18 w-full rounded-xl border border-[#dedbd0] p-3 text-sm outline-none focus:border-[#b69b00] bg-[#faf9f5]"
                     />
                   </div>
-                  <textarea
-                    name="address"
-                    required
-                    minLength={8}
-                    placeholder="Nama homestay, villa, jalan, RT/RW, atau patokan di Dieng..."
-                    className="min-h-20 w-full rounded-xl border border-[#dedbd0] p-3 text-sm outline-none focus:border-[#b69b00]"
-                  />
-
-                  <DeliveryLocationPicker />
 
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <button

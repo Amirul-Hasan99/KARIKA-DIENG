@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import confetti from "canvas-confetti";
 import { Flaticon } from "@/components/ui/Flaticon";
+import { BrandLogoIcon } from "@/components/ui/BrandLogo";
 import { Order } from "@/types";
 
 const paymentLabels: Record<string, string> = {
@@ -61,11 +62,52 @@ export default function OrderTrackingPage() {
           } catch {}
         }
       } catch (e) {
-        if (active) setError(e instanceof Error ? e.message : "Gagal memuat pesanan.");
+        if (active) {
+          // Check local device backup before giving up
+          try {
+            const raw = localStorage.getItem("karika_active_order");
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (parsed.orderId === orderId || parsed.orderNumber === orderId) {
+                setOrder({
+                  id: parsed.orderId,
+                  order_number: parsed.orderNumber,
+                  table_id: "delivery",
+                  table_number: "delivery",
+                  customer_name: parsed.customerName || "Pelanggan",
+                  customer_phone: parsed.customerPhone || "",
+                  delivery_address: parsed.address || "Kawasan Dieng (Radius 8 km)",
+                  delivery_distance_km: 2.5,
+                  total_amount: parsed.totalAmount || 0,
+                  payment_status: parsed.paymentStatus || "pending",
+                  order_status: "received",
+                  delivery_status: parsed.deliveryStatus || "pending",
+                  payment_type: parsed.paymentType || "qris",
+                  items: parsed.items || [
+                    {
+                      menu_id: "carica-biasa",
+                      name: "Pesanan Oleh-Oleh Dieng",
+                      price: parsed.totalAmount || 0,
+                      qty: 1,
+                      selected_modifiers: [],
+                      subtotal: parsed.totalAmount || 0,
+                    },
+                  ],
+                  created_at: parsed.updatedAt || new Date().toISOString(),
+                  updated_at: parsed.updatedAt || new Date().toISOString(),
+                } as any);
+                setError("");
+                return;
+              }
+            }
+          } catch {}
+          setError(e instanceof Error ? e.message : "Gagal memuat pesanan.");
+        }
       }
     };
     void load();
-    const timer = setInterval(() => void load(), 4000);
+    // Fast polling every 2 seconds for instant real-time synchronization with admin updates
+    const timer = setInterval(() => void load(), 2000);
     return () => {
       active = false;
       clearInterval(timer);
@@ -198,10 +240,14 @@ export default function OrderTrackingPage() {
               <Flaticon name="search" className="text-xs text-[#90802a]" />
               <span>Cari dengan No. WA</span>
             </Link>
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#938126] hidden sm:flex items-center gap-1.5">
-              <Flaticon name="badge-check" variant="sr" className="text-sm text-[#b69b00]" />
-              Karika Dieng
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#292a23] text-[#f4ce00] shadow-xs" title="Karika Dieng">
+                <BrandLogoIcon size={14} color="#f4ce00" />
+              </span>
+              <span className="text-xs font-black tracking-tight text-[#24251f] hidden sm:inline">
+                KARIKA<span className="text-[#90802a] ml-0.5">DIENG</span>
+              </span>
+            </div>
           </div>
         </div>
 
@@ -294,6 +340,111 @@ export default function OrderTrackingPage() {
                     </div>
                     <p className="mt-1 text-xs text-[#77766f]">
                       Radius {order.delivery_distance_km ?? "–"} km dari Titik 0 Dieng
+                    </p>
+                  </div>
+                </div>
+
+                {/* Real-time 4-Stage Delivery Tracking Stepper */}
+                <div className="mt-6 rounded-2xl border border-amber-200/80 bg-white p-4 sm:p-5 shadow-xs">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                      </span>
+                      <p className="text-xs font-bold text-[#24251f] uppercase tracking-wider">
+                        Live Tracking Status Pengantaran
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                      Real-time Sinkron Admin
+                    </span>
+                  </div>
+
+                  {/* 4 Steps Indicator */}
+                  <div className="mt-5 grid grid-cols-4 gap-2 text-center">
+                    {[
+                      { step: 1, label: "1. Diterima Toko", sub: "Antrean Masuk" },
+                      { step: 2, label: "2. Dikemas", sub: "Proses Packing" },
+                      { step: 3, label: "3. Kurir OTW", sub: "Menuju Titik Maps" },
+                      { step: 4, label: "4. Selesai", sub: "Pesanan Tiba" },
+                    ].map((s) => {
+                      const currentStep = (() => {
+                        if (order.delivery_status === "delivered" || order.order_status === "completed") return 4;
+                        if (order.delivery_status === "picked_up" || order.order_status === "ready") return 3;
+                        if (order.delivery_status === "assigned" || order.order_status === "cooking") return 2;
+                        return 1;
+                      })();
+
+                      const isPassed = currentStep > s.step;
+                      const isCurrent = currentStep === s.step;
+
+                      return (
+                        <div key={s.step} className="flex flex-col items-center">
+                          <div
+                            className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-black transition-all ${
+                              isPassed
+                                ? "bg-emerald-600 text-white shadow-xs"
+                                : isCurrent
+                                ? "bg-[#f4ce00] text-black ring-4 ring-amber-100 shadow-md scale-105"
+                                : "bg-slate-100 text-slate-400 border border-slate-200"
+                            }`}
+                          >
+                            {isPassed ? "✓" : s.step}
+                          </div>
+                          <p
+                            className={`mt-2 text-xs font-bold leading-tight ${
+                              isCurrent
+                                ? "text-[#24251f]"
+                                : isPassed
+                                ? "text-emerald-700"
+                                : "text-slate-400"
+                            }`}
+                          >
+                            {s.label}
+                          </p>
+                          <span
+                            className={`text-[10px] mt-0.5 hidden xs:inline ${
+                              isCurrent
+                                ? "text-amber-800 font-semibold"
+                                : "text-slate-400"
+                            }`}
+                          >
+                            {s.sub}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Progress Line */}
+                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-500 via-emerald-500 to-emerald-600 transition-all duration-500"
+                      style={{
+                        width:
+                          order.delivery_status === "delivered" || order.order_status === "completed"
+                            ? "100%"
+                            : order.delivery_status === "picked_up" || order.order_status === "ready"
+                            ? "75%"
+                            : order.delivery_status === "assigned" || order.order_status === "cooking"
+                            ? "50%"
+                            : "25%",
+                      }}
+                    />
+                  </div>
+
+                  {/* Dynamic Status Banner Description */}
+                  <div className="mt-3.5 rounded-xl bg-[#faf9f5] p-3 text-xs border border-[#eae7dc] flex items-center gap-2">
+                    <Flaticon name="info" variant="sr" className="text-sm text-[#90802a] shrink-0" />
+                    <p className="text-[#5c5a52] leading-relaxed">
+                      {order.delivery_status === "delivered" || order.order_status === "completed"
+                        ? "🎉 Pesanan telah sukses sampai dan diserahkan ke pembeli. Selamat menikmati oleh-oleh khas Dieng!"
+                        : order.delivery_status === "picked_up" || order.order_status === "ready"
+                        ? "🛵 Kurir Karika Dieng sedang meluncur dalam perjalanan menuju titik koordinat Google Maps Anda."
+                        : order.delivery_status === "assigned" || order.order_status === "cooking"
+                        ? "🎁 Paket oleh-oleh Anda sedang dikemas dan dipacking rapi oleh tim Karika Dieng."
+                        : "📦 Toko Karika Dieng telah menerima pesanan Anda. Sedang menunggu antrean pengemasan."}
                     </p>
                   </div>
                 </div>
@@ -453,29 +604,89 @@ export default function OrderTrackingPage() {
 
               {/* Delivery Details */}
               <div className="p-6 sm:p-8 space-y-5">
-                <div className="flex items-start gap-3 rounded-2xl border border-[#efeee9] bg-[#fdfcf9] p-4">
-                  <Flaticon name="marker" variant="sr" className="mt-0.5 text-base text-[#938126]" />
-                  <div className="text-sm">
-                    <p className="font-semibold text-xs text-[#77766f] uppercase tracking-wider">
-                      Alamat Pengantaran
-                    </p>
-                    <p className="mt-1 font-medium leading-6 text-[#292a23]">
-                      {order.delivery_address}
-                    </p>
-                    <p className="mt-1 text-xs text-[#77766f]">
-                      Kontak Penerima: <strong>{order.customer_phone}</strong> ({order.customer_name})
-                    </p>
-                    {order.coordinates && (
-                      <a
-                        className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-[#766600] hover:underline"
-                        target="_blank"
-                        rel="noreferrer"
-                        href={`https://www.google.com/maps/search/?api=1&query=${order.coordinates.lat},${order.coordinates.lng}`}
-                      >
-                        <Flaticon name="arrow-up-right-from-square" variant="rr" className="text-xs" />
-                        <span>Buka Titik Antar di Google Maps</span>
-                      </a>
-                    )}
+                <div className="overflow-hidden rounded-2xl border border-amber-200/90 bg-[#fffdf5] shadow-xs">
+                  {/* Header Bar */}
+                  <div className="flex items-center justify-between border-b border-amber-100 bg-[#fff9e6] px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Flaticon name="marker" variant="sr" className="text-base text-[#938126]" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#63530f]">
+                        Titik Pengantaran &amp; Alamat
+                      </span>
+                    </div>
+                    {order.delivery_distance_km ? (
+                      <span className="rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold text-amber-900 border border-amber-200">
+                        Jarak: ~{order.delivery_distance_km} km dari Toko Dieng
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="p-4 space-y-4">
+                    {/* Primary GPS Coordinates Point (Google Maps Integrated) */}
+                    <div className="rounded-xl border border-amber-200 bg-white p-3.5 shadow-2xs">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+                            <p className="text-xs font-bold text-[#24251f]">
+                              Titik Pasti Kurir (Google Maps Terintegrasi)
+                            </p>
+                          </div>
+                          {order.coordinates ? (
+                            <p className="mt-1 font-mono text-[11px] text-[#7a7457]">
+                              Koordinat GPS: {order.coordinates.lat.toFixed(6)}, {order.coordinates.lng.toFixed(6)}
+                            </p>
+                          ) : (
+                            <p className="mt-1 text-xs text-[#7a7457]">
+                              Kawasan Dieng (Radius 8 km)
+                            </p>
+                          )}
+                        </div>
+
+                        {order.coordinates && (
+                          <div className="flex items-center gap-2">
+                            <a
+                              target="_blank"
+                              rel="noreferrer"
+                              href={`https://www.google.com/maps/dir/?api=1&destination=${order.coordinates.lat},${order.coordinates.lng}`}
+                              className="inline-flex items-center gap-1.5 rounded-xl bg-[#292a23] px-3.5 py-2 text-xs font-bold text-[#f4ce00] hover:bg-black transition shadow-xs"
+                            >
+                              <Flaticon name="marker" variant="sr" className="text-xs" />
+                              <span>🧭 Rute Navigasi Google Maps</span>
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Secondary Benchmark / Detail Notes */}
+                    <div className="rounded-xl border border-[#dedbd0] bg-[#faf9f5] p-3.5">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#63625b]">
+                        Detail Patokan Alamat Tambahan (Pendukung):
+                      </p>
+                      <p className="mt-1.5 font-medium text-sm leading-6 text-[#292a23]">
+                        {order.delivery_address || "Tidak ada catatan tambahan."}
+                      </p>
+                    </div>
+
+                    {/* Contact Info */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-amber-100/80 pt-3 text-xs text-[#63625b]">
+                      <div>
+                        Penerima: <strong className="text-[#24251f] font-bold">{order.customer_name}</strong>
+                        <span className="mx-2">•</span>
+                        WhatsApp: <strong className="text-[#24251f] font-bold">{order.customer_phone}</strong>
+                      </div>
+                      {order.customer_phone && (
+                        <a
+                          href={`https://wa.me/${order.customer_phone.replace(/\D/g, "").replace(/^0/, "62")}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 font-bold text-emerald-700 hover:underline"
+                        >
+                          <Flaticon name="phone-call" variant="sr" className="text-xs text-emerald-600" />
+                          <span>Hubungi via WhatsApp</span>
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
 

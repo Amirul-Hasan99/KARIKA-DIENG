@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Flaticon } from "@/components/ui/Flaticon";
+import { BrandLogoIcon } from "@/components/ui/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,7 +98,43 @@ function OrdersContent() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Gagal melakukan pencarian pesanan.");
 
-      const foundOrders = data.orders || [];
+      const foundOrders = [...(data.orders || [])];
+
+      // Check localStorage for matches on this device
+      try {
+        const raw = localStorage.getItem("karika_active_order");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const cleanQ = q.replace(/\D/g, "");
+          const cleanPhone = (parsed.customerPhone || "").replace(/\D/g, "");
+          const normQ = cleanQ.startsWith("62") ? cleanQ.slice(2) : cleanQ.startsWith("0") ? cleanQ.slice(1) : cleanQ;
+          const normPhone = cleanPhone.startsWith("62") ? cleanPhone.slice(2) : cleanPhone.startsWith("0") ? cleanPhone.slice(1) : cleanPhone;
+
+          const isPhoneMatch =
+            (cleanQ.length >= 4 && (cleanPhone.includes(cleanQ) || cleanQ.includes(cleanPhone))) ||
+            (normQ.length >= 4 && normPhone.length >= 4 && (normPhone === normQ || normPhone.includes(normQ) || normQ.includes(normPhone)));
+          const isNumMatch = parsed.orderNumber && parsed.orderNumber.toLowerCase().includes(q.toLowerCase());
+          const isIdMatch = parsed.orderId && parsed.orderId.toLowerCase().includes(q.toLowerCase());
+
+          if (isPhoneMatch || isNumMatch || isIdMatch) {
+            const alreadyInList = foundOrders.some((o: any) => o.id === parsed.orderId || o.order_number === parsed.orderNumber);
+            if (!alreadyInList) {
+              foundOrders.unshift({
+                id: parsed.orderId,
+                order_number: parsed.orderNumber,
+                customer_name: parsed.customerName || "Pelanggan",
+                customer_phone: parsed.customerPhone || "",
+                total_amount: parsed.totalAmount || 0,
+                payment_status: parsed.paymentStatus || "pending",
+                delivery_status: parsed.deliveryStatus || "pending",
+                payment_type: parsed.paymentType || "qris",
+                created_at: parsed.updatedAt || new Date().toISOString(),
+              });
+            }
+          }
+        }
+      } catch {}
+
       setResults(foundOrders);
       if (foundOrders.length === 0) {
         setErrorMsg(
@@ -118,7 +155,7 @@ function OrdersContent() {
         <nav className="mx-auto flex h-[68px] max-w-5xl items-center justify-between px-4 sm:px-8">
           <Link href="/" className="flex items-center gap-2">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#292a23] text-[#f4ce00] shadow-xs">
-              <Flaticon name="sparkles" variant="sr" className="text-base" />
+              <BrandLogoIcon size={18} color="#f4ce00" />
             </span>
             <div className="flex flex-col">
               <span className="text-lg font-black tracking-tight text-[#24251f]">

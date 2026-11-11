@@ -94,7 +94,19 @@ export async function POST(req: NextRequest) {
       created_at: now, updated_at: now,
     } satisfies Order;
     await saveOrder(order);
-    return NextResponse.json({ success: true, orderId, orderNumber, paymentType, snapToken, redirectUrl, totalAmount, isDummy });
+    return NextResponse.json({
+      success: true,
+      orderId,
+      orderNumber,
+      paymentType,
+      snapToken,
+      redirectUrl,
+      totalAmount,
+      isDummy,
+      deliveryDistanceKm: Number(distance.toFixed(2)),
+      coordinates,
+      address: address.trim(),
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Checkout gagal.";
     const status = /belum tersedia|belum memiliki harga|tidak valid/.test(message) ? 400 : 503;
