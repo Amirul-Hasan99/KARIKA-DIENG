@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useCartStore } from "@/store/useCartStore";
 import { formatRupiah } from "@/lib/utils";
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, User, Phone, Utensils } from "lucide-react";
+import Flaticon from "@/components/ui/Flaticon";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -53,7 +53,7 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-              <ShoppingBag className="h-5 w-5" strokeWidth={1.75} />
+              <Flaticon name="shopping-bag" className="text-base" />
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900 leading-tight">Keranjang Pesanan</h2>
@@ -67,7 +67,7 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
             onClick={onClose}
             className="rounded-full bg-slate-100 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition"
           >
-            <X className="h-4 w-4" strokeWidth={2} />
+            <Flaticon name="cross" className="text-xs" />
           </button>
         </div>
 
@@ -76,7 +76,7 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 mb-3">
-                <ShoppingBag className="h-7 w-7" strokeWidth={1.75} />
+                <Flaticon name="shopping-bag" className="text-2xl" />
               </div>
               <p className="text-sm font-bold text-slate-800">Keranjang masih kosong</p>
               <p className="text-xs text-slate-500 max-w-xs mt-1">
@@ -93,7 +93,7 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
 
                 <div className="space-y-2">
                   <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" strokeWidth={1.75} />
+                    <Flaticon name="user" className="absolute left-3 top-2.5 text-sm text-slate-400" />
                     <input
                       type="text"
                       value={nameInput}
@@ -107,7 +107,7 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
                   </div>
 
                   <div className="relative">
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" strokeWidth={1.75} />
+                    <Flaticon name="phone-call" className="absolute left-3 top-2.5 text-sm text-slate-400" />
                     <input
                       type="tel"
                       value={phoneInput}
@@ -119,7 +119,7 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
 
                   {/* Table Selector */}
                   <div className="relative">
-                    <Utensils className="absolute left-3 top-3 h-4 w-4 text-slate-400" strokeWidth={1.75} />
+                    <Flaticon name="shop" className="absolute left-3 top-2.5 text-sm text-slate-400" />
                     <select
                       value={tableNumber || "01"}
                       onChange={(e) => {
@@ -200,7 +200,7 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
                         className="p-1 text-slate-300 hover:text-rose-500 transition"
                         title="Hapus"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Flaticon name="trash" className="text-xs" />
                       </button>
                     </div>
 
@@ -210,7 +210,7 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
                           onClick={() => updateQty(item.id, item.qty - 1)}
                           className="flex h-6 w-6 items-center justify-center rounded text-slate-600 hover:bg-white transition"
                         >
-                          <Minus className="h-3 w-3" />
+                          <Flaticon name="minus" className="text-[10px]" />
                         </button>
                         <span className="w-6 text-center text-xs font-bold text-slate-800">
                           {item.qty}
@@ -219,7 +219,7 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
                           onClick={() => updateQty(item.id, item.qty + 1)}
                           className="flex h-6 w-6 items-center justify-center rounded text-slate-600 hover:bg-white transition"
                         >
-                          <Plus className="h-3 w-3" />
+                          <Flaticon name="plus" className="text-[10px]" />
                         </button>
                       </div>
 
@@ -257,7 +257,7 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-3 text-xs sm:text-sm font-bold text-white shadow-sm shadow-amber-500/30 hover:brightness-105 active:scale-98 transition-all"
             >
               <span>Bayar via QRIS / Midtrans</span>
-              <ArrowRight className="h-4 w-4" strokeWidth={2} />
+              <Flaticon name="arrow-right" className="text-sm" />
             </button>
           </div>
         )}
