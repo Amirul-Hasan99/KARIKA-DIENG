@@ -1,9 +1,9 @@
 @echo off
-title Katalog Kopi & Snack - Self Order Launcher
+title Karika Dieng - Pusat Oleh-Oleh Khas Dieng Launcher
 color 0A
 
 echo ====================================================================
-echo             KATALOG KOPI & SNACK - SELF ORDER & POS SYSTEM
+echo             KARIKA DIENG - PUSAT OLEH-OLEH KHAS DIENG
 echo ====================================================================
 echo.
 
@@ -50,17 +50,17 @@ if exist ".next\BUILD_ID" (
 
 :: 5. Tampilkan Navigasi URL
 echo ====================================================================
-echo  Server akan berjalan di:
+echo  Server berjalan di:
 echo    - Beranda Karika Dieng: http://localhost:3000
 echo    - Katalog Produk      : http://localhost:3000/catalog
 echo    - Pantau Pesanan      : http://localhost:3000/orders
 echo    - Admin Dashboard     : http://localhost:3000/admin
 echo ====================================================================
 echo.
-echo Membuka browser secara otomatis dalam 3 detik...
+echo Membuka browser secara otomatis dalam 2 detik...
 
-:: Buka browser secara otomatis di latar belakang setelah jeda singkat
-start /b cmd /c "timeout /t 3 /nobreak >nul & start http://localhost:3000"
+:: Buka browser secara otomatis di latar belakang
+start /b cmd /c "timeout /t 2 /nobreak >nul & start http://localhost:3000"
 
 :: 6. Jalankan server Next.js
 echo Menjalankan 'npm run dev'...

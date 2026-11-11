@@ -48,25 +48,31 @@ if %errorlevel% neq 0 (
 echo [3/3] Melakukan push ke origin main...
 git push -u origin main
 
-if %errorlevel% equ 0 (
-    color 0A
-    echo.
-    echo ====================================================================
-    echo [SUKSES] Berhasil melakukan push ke https://github.com/Amirul-Hasan99/KARIKA-DIENG
-    echo ====================================================================
-) else (
-    color 0C
-    echo.
-    echo ====================================================================
-    echo [PERINGATAN] Gagal melakukan push otomatis ke GitHub.
-    echo.
-    echo Jika repositori remote sudah memiliki commit (misal README awal), coba jalankan:
-    echo   git pull origin main --rebase
-    echo Lalu jalankan push.bat kembali.
-    echo.
-    echo Pastikan juga akun Git / Personal Access Token Anda memiliki izin akses.
-    echo ====================================================================
-)
+if %errorlevel% equ 0 goto :push_success
+goto :push_failed
 
+:push_success
+color 0A
+echo.
+echo ====================================================================
+echo [SUKSES] Berhasil melakukan push ke https://github.com/Amirul-Hasan99/KARIKA-DIENG
+echo ====================================================================
+goto :push_end
+
+:push_failed
+color 0C
+echo.
+echo ====================================================================
+echo [PERINGATAN] Gagal melakukan push otomatis ke GitHub.
+echo.
+echo Penyebab umum:
+echo 1. Koneksi internet / hotspot sedang terputus atau timeout ke github.com
+echo 2. Jika remote repo memiliki commit yang belum di-pull, jalankan:
+echo    git pull origin main --rebase
+echo 3. Pastikan izin akses / Personal Access Token GitHub sudah sesuai.
+echo ====================================================================
+goto :push_end
+
+:push_end
 echo.
 pause
