@@ -143,6 +143,8 @@ export interface MidtransSnapTransactionResponse {
   token: string;
   redirect_url: string;
   isSimulated?: boolean;
+  isDummy?: boolean;
+  qrPayload?: string;
 }
 
 export interface MidtransWebhookNotification {

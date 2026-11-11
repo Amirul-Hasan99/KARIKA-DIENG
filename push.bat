@@ -1,11 +1,11 @@
 @echo off
-title Push Katalog Menu ke GitHub
+title Push Karika Dieng ke GitHub
 color 0B
 
 echo ====================================================================
-echo             PUSH KATALOG MENU KE GITHUB REPOSITORY
+echo             PUSH KARIKA DIENG KE GITHUB REPOSITORY
 echo ====================================================================
-echo Target Repo: https://github.com/Amirul-Hasan99/KATALOG-MENU.git
+echo Target Repo: https://github.com/Amirul-Hasan99/KARIKA-DIENG.git
 echo Branch     : main
 echo.
 
@@ -22,15 +22,15 @@ if %errorlevel% neq 0 (
 :: 2. Pastikan branch saat ini adalah main
 git branch -M main
 
-:: 3. Set remote origin jika belum ada atau berbeda
+:: 3. Set remote origin ke repositori KARIKA-DIENG
 git remote remove origin >nul 2>nul
-git remote add origin https://github.com/Amirul-Hasan99/KATALOG-MENU.git
+git remote add origin https://github.com/Amirul-Hasan99/KARIKA-DIENG.git
 
 :: 4. Input pesan commit (opsional, default: timestamp)
 set "COMMIT_MSG="
 set /p "COMMIT_MSG=Masukkan pesan commit (tekan Enter untuk default): "
 if "%COMMIT_MSG%"=="" (
-    set "COMMIT_MSG=Update Katalog Menu & POS System - %date% %time%"
+    set "COMMIT_MSG=Update Karika Dieng Web & QRIS System - %date% %time%"
 )
 
 :: 5. Git Add & Commit
@@ -52,7 +52,7 @@ if %errorlevel% equ 0 (
     color 0A
     echo.
     echo ====================================================================
-    echo [SUKSES] Berhasil melakukan push ke https://github.com/Amirul-Hasan99/KATALOG-MENU
+    echo [SUKSES] Berhasil melakukan push ke https://github.com/Amirul-Hasan99/KARIKA-DIENG
     echo ====================================================================
 ) else (
     color 0C

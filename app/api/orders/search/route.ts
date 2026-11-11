@@ -27,7 +27,12 @@ export async function GET(req: NextRequest) {
         if (order.id.toLowerCase() === q) return true;
         if (order.customer_id && order.customer_id.toLowerCase() === q) return true;
         if (order.order_number.toLowerCase().includes(q)) return true;
-        if (order.customer_id && order.customer_id.toLowerCase().includes(q)) return true;
+        if (order.customer_name && order.customer_name.toLowerCase().includes(q)) return true;
+        const cleanQueryPhone = q.replace(/\D/g, "");
+        if (cleanQueryPhone.length >= 4 && order.customer_phone) {
+          const cleanOrderPhone = order.customer_phone.replace(/\D/g, "");
+          if (cleanOrderPhone.includes(cleanQueryPhone)) return true;
+        }
       }
 
       return false;

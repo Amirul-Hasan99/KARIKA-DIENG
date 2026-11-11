@@ -450,7 +450,10 @@ export default function AdminDashboardPage() {
             </Link>
             <button
               type="button"
-              onClick={async () => { await fetch("/api/admin/logout", { method: "POST" }); window.location.assign("/admin/login"); }}
+              onClick={async () => {
+                try { await fetch("/api/admin/logout", { method: "POST" }); } catch {}
+                window.location.replace("/admin/login");
+              }}
               className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-black"
             >Keluar</button>
           </div>

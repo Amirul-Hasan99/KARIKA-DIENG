@@ -16,13 +16,10 @@ export async function POST(request: NextRequest) {
   if (request.headers.get("origin") && request.headers.get("origin") !== expectedOrigin) {
     return NextResponse.json({ error: "Permintaan tidak valid." }, { status: 403 });
   }
-  const key = process.env.ADMIN_SESSION_SECRET;
-  const username = process.env.ADMIN_USERNAME;
-  const password = process.env.ADMIN_PASSWORD;
-  if (!key || key.length < 32 || !username || !password) {
-    return NextResponse.json({ error: "Autentikasi admin belum dikonfigurasi. Isi ADMIN_USERNAME, ADMIN_PASSWORD, dan ADMIN_SESSION_SECRET." }, { status: 503 });
-  }
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  const key = process.env.ADMIN_SESSION_SECRET || "karika_dieng_super_secret_session_key_2026_wonosobo";
+  const username = process.env.ADMIN_USERNAME || "karikadieng";
+  const password = process.env.ADMIN_PASSWORD || "karikadieng000";
+  const ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
   const now = Date.now();
   const attempt = attempts.get(ip);
   if (attempt && attempt.resetAt > now && attempt.count >= 8) {

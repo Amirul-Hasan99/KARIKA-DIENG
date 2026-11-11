@@ -20,12 +20,39 @@ const products = [
 const rupiah=(n:number)=>`Rp${n.toLocaleString("id-ID")}`;
 type Product=typeof products[number];
 export default function CatalogPage(){
-  const [query,setQuery]=useState(""); const [category,setCategory]=useState("Semua"); const [cart,setCart]=useState<Record<string,number>>({}); const [selected,setSelected]=useState<Product|null>(null); const [checkout,setCheckout]=useState(false); const [busy,setBusy]=useState(false); const [error,setError]=useState(""); const [payment,setPayment]=useState<"qris"|"cod">("qris");
+  const [query,setQuery]=useState(""); const [category,setCategory]=useState("Semua"); const [cart,setCart]=useState<Record<string,number>>({}); const [selected,setSelected]=useState<Product|null>(null);   const [checkout,setCheckout]=useState(false); const [busy,setBusy]=useState(false); const [error,setError]=useState(""); const [payment,setPayment]=useState<"qris"|"cod">("qris");
+  const [isLocationEligible, setIsLocationEligible] = useState(true);
   const categories=["Semua","Carica","Makanan","Camilan","Minuman"];
   const visible=useMemo(()=>products.filter(p=>(category==="Semua"||p.group===category)&&`${p.name} ${p.description}`.toLowerCase().includes(query.toLowerCase())),[category,query]);
   const count=Object.values(cart).reduce((a,b)=>a+b,0); const total=products.reduce((s,p)=>s+p.price*(cart[p.id]||0),0);
   const change=(id:string,delta:number)=>setCart(c=>{const n={...c,[id]:Math.max(0,Math.min(99,(c[id]||0)+delta))};if(!n[id])delete n[id];return n});
-  async function submitOrder(event:React.FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setError("");const f=new FormData(event.currentTarget);const lat=Number(f.get("lat")),lng=Number(f.get("lng"));try{const response=await fetch("/api/orders/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerName:f.get("name"),customerPhone:f.get("phone"),address:f.get("address"),coordinates:{lat,lng},paymentType:payment,items:products.filter(p=>cart[p.id]).map(p=>({productId:p.id,qty:cart[p.id]}))})});const data=await response.json();if(!response.ok)throw new Error(data.error||"Checkout belum dapat diproses.");if(payment==="qris"&&data.redirectUrl){location.assign(data.redirectUrl);return}location.assign(`/orders/${data.orderId}`)}catch(e){setError(e instanceof Error?e.message:"Checkout gagal. Coba lagi.");setBusy(false)}}
+  async function submitOrder(event:React.FormEvent<HTMLFormElement>){
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    const f=new FormData(event.currentTarget);
+    const lat=Number(f.get("lat")),lng=Number(f.get("lng"));
+    try{
+      const response=await fetch("/api/orders/checkout",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          customerName:f.get("name"),
+          customerPhone:f.get("phone"),
+          address:f.get("address"),
+          coordinates:{lat,lng},
+          paymentType:payment,
+          items:products.filter(p=>cart[p.id]).map(p=>({productId:p.id,qty:cart[p.id]}))
+        })
+      });
+      const data=await response.json();
+      if(!response.ok)throw new Error(data.error||"Checkout belum dapat diproses.");
+      location.assign(`/orders/${data.orderId}`);
+    }catch(e){
+      setError(e instanceof Error?e.message:"Checkout gagal. Coba lagi.");
+      setBusy(false);
+    }
+  }
   return <main className="min-h-screen bg-[#f8f7f2] text-[#24251f]">
     <header className="sticky top-0 z-20 border-b border-[#e9e7dc] bg-[#f8f7f2]/95 backdrop-blur"><nav className="mx-auto flex h-[68px] max-w-7xl items-center justify-between px-4 sm:px-8"><div className="flex items-center gap-3"><Link href="/" className="text-xl font-black tracking-tight">dioleh<span className="text-[#b69b00]">2</span><span className="ml-2 text-[10px] font-bold tracking-[.22em] text-[#858585]">DIENG</span></Link><Link href="/admin/login" aria-label="Login admin" title="Admin" className="grid h-8 w-8 place-items-center rounded-full border border-[#e3e0d5] bg-white text-[#77756f] hover:text-black"><LockKeyhole className="h-3.5 w-3.5"/></Link></div><div className="flex items-center gap-2"><a href="https://www.google.com/maps/search/?api=1&query=Titik+0+Dieng" target="_blank" rel="noreferrer" className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium text-[#68685f] hover:bg-white sm:flex"><MapPin className="h-4 w-4"/>Area antar 8 km</a><button onClick={()=>setCheckout(true)} className="relative inline-flex items-center gap-2 rounded-full bg-[#282922] px-4 py-2.5 text-sm font-semibold text-white hover:bg-black"><ShoppingBag className="h-4 w-4"/>Keranjang{count>0&&<span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#f4ce00] px-1 text-[11px] font-bold text-black">{count}</span>}</button></div></nav></header>
     <section className="mx-auto max-w-7xl px-4 pb-16 pt-9 sm:px-8 sm:pt-14"><div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end"><div><p className="text-xs font-semibold uppercase tracking-[.2em] text-[#90802a]">Oleh-oleh Wonosobo · dikemas isi enam</p><h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">Bawa pulang rasa Dieng.</h1><p className="mt-3 max-w-2xl leading-7 text-[#727168]">Pilih beberapa favorit sekaligus. Kami mengantar ke alamat dalam radius 8 km dari Titik Nol Dieng.</p></div><div className="relative w-full sm:w-72"><Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#858585]"/><input aria-label="Cari produk" placeholder="Cari oleh-oleh..." value={query} onChange={e=>setQuery(e.target.value)} className="h-11 w-full rounded-xl border border-[#e1dfd5] bg-white pl-10 pr-3 text-sm outline-none focus:border-[#b69b00]"/></div></div>
