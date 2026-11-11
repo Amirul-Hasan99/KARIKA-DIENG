@@ -42,13 +42,19 @@ if not exist "node_modules\next\" (
     echo.
 )
 
-:: 4. Tampilkan Navigasi URL
+:: 4. Bersihkan cache .next usang bila ada sisa build produksi
+if exist ".next\BUILD_ID" (
+    echo [INFO] Menghapus cache produksi .next agar server dev berjalan optimal...
+    rd /s /q .next 2>nul
+)
+
+:: 5. Tampilkan Navigasi URL
 echo ====================================================================
 echo  Server akan berjalan di:
-echo    - Beranda / Navigasi : http://localhost:3000
-echo    - Menu Meja 01       : http://localhost:3000/table/table-01
-echo    - Kitchen Display KDS: http://localhost:3000/admin/kitchen
-echo    - Dashboard Kasir/POS: http://localhost:3000/admin
+echo    - Beranda Karika Dieng: http://localhost:3000
+echo    - Katalog Produk      : http://localhost:3000/catalog
+echo    - Pantau Pesanan      : http://localhost:3000/orders
+echo    - Admin Dashboard     : http://localhost:3000/admin
 echo ====================================================================
 echo.
 echo Membuka browser secara otomatis dalam 3 detik...
@@ -56,7 +62,7 @@ echo Membuka browser secara otomatis dalam 3 detik...
 :: Buka browser secara otomatis di latar belakang setelah jeda singkat
 start /b cmd /c "timeout /t 3 /nobreak >nul & start http://localhost:3000"
 
-:: 5. Jalankan server Next.js
+:: 6. Jalankan server Next.js
 echo Menjalankan 'npm run dev'...
 echo Tekan Ctrl + C untuk menghentikan server kapan saja.
 echo.
