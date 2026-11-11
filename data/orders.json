@@ -1,5 +1,39 @@
 [
   {
+    "id": "ord_069efd4e-0340-4f32-8273-65f3fd2c4d1b",
+    "order_number": "GC-261111-DELIVERY-K0EU",
+    "table_id": "delivery",
+    "table_number": "delivery",
+    "customer_name": "Hasyim",
+    "customer_phone": "088802724555",
+    "delivery_address": "Rumah Asrep Jalan Dieng Raya No 12",
+    "coordinates": {
+      "lat": -7.2038524624413895,
+      "lng": 109.91115677943185
+    },
+    "delivery_distance_km": 0.04,
+    "items": [
+      {
+        "menu_id": "carica-biasa",
+        "name": "Carica Biasa · isi 6",
+        "price": 22000,
+        "qty": 5,
+        "selected_modifiers": [],
+        "subtotal": 110000
+      }
+    ],
+    "total_amount": 110000,
+    "payment_status": "settlement",
+    "order_status": "completed",
+    "delivery_status": "delivered",
+    "payment_type": "cod",
+    "snap_token": "",
+    "snap_redirect_url": "",
+    "created_at": "2026-11-11T17:37:12.637Z",
+    "updated_at": "2026-11-11T17:39:36.386Z",
+    "midtrans_transaction_id": "cash_1794418698738"
+  },
+  {
     "id": "ord_b9de2522-4067-4850-8bc4-37a157c77c8d",
     "order_number": "GC-261111-DELIVERY-2D6R",
     "table_id": "delivery",
@@ -23,14 +57,15 @@
       }
     ],
     "total_amount": 110000,
-    "payment_status": "pending",
+    "payment_status": "failed",
     "order_status": "completed",
     "delivery_status": "delivered",
-    "payment_type": "qris",
+    "payment_type": "cod",
     "snap_token": "snap-dummy-GC-261111-DELIVERY-2D6R",
     "snap_redirect_url": "/orders/GC-261111-DELIVERY-2D6R?payment=qris",
     "created_at": "2026-11-11T14:47:22.433Z",
-    "updated_at": "2026-11-11T14:47:26.080Z"
+    "updated_at": "2026-11-11T17:37:59.007Z",
+    "midtrans_transaction_id": "cash_1794418492704"
   },
   {
     "id": "ord_8365c39a-33be-4c85-bff4-2e1667af74ee",
@@ -56,14 +91,15 @@
       }
     ],
     "total_amount": 110000,
-    "payment_status": "pending",
-    "order_status": "received",
-    "delivery_status": "pending",
-    "payment_type": "qris",
+    "payment_status": "settlement",
+    "order_status": "completed",
+    "delivery_status": "delivered",
+    "payment_type": "cod",
     "snap_token": "snap-dummy-GC-261111-DELIVERY-ZBYM",
     "snap_redirect_url": "/orders/GC-261111-DELIVERY-ZBYM?payment=qris",
     "created_at": "2026-11-11T14:45:45.373Z",
-    "updated_at": "2026-11-11T14:45:45.373Z"
+    "updated_at": "2026-11-11T17:34:47.531Z",
+    "midtrans_transaction_id": "cash_1794418482143"
   },
   {
     "id": "ord_demo_jyqf",
