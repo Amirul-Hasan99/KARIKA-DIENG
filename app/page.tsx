@@ -89,16 +89,18 @@ export default function HomePage() {
       <header className="sticky top-0 z-30 border-b border-[#e7e4d8] bg-[#f8f7f2]/90 backdrop-blur-md">
         <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-10">
           <div className="flex items-center gap-4">
-            <Link href="/" className="flex flex-col">
-              <span className="text-2xl font-black tracking-tight text-[#24251f]">
-                dioleh<span className="text-[#c4a000]">2</span>
-                <span className="ml-1.5 text-xs font-extrabold tracking-[0.2em] text-[#8c8a7e]">
-                  DIENG
+            <Link href="/" className="flex items-center gap-2.5">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#292a23] text-[#f4ce00] shadow-sm">
+                <Flaticon name="sparkles" variant="sr" className="text-xl" />
+              </span>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black tracking-tight text-[#24251f]">
+                  KARIKA<span className="text-[#90802a] ml-1">DIENG</span>
                 </span>
-              </span>
-              <span className="text-[10px] font-medium text-[#7d7a6e] -mt-1 hidden sm:inline">
-                Oleh-Oleh Khas Dataran Tinggi
-              </span>
+                <span className="text-[10px] font-semibold text-[#7d7a6e] -mt-1 hidden sm:inline">
+                  Sentra Oleh-Oleh Khas Dataran Tinggi
+                </span>
+              </div>
             </Link>
           </div>
 
@@ -106,6 +108,9 @@ export default function HomePage() {
             <Link href="/catalog" className="hover:text-black transition">
               Katalog Lengkap
             </Link>
+            <a href="#alur-pemesanan" className="hover:text-black transition">
+              Alur Pemesanan
+            </a>
             <a href="#keunggulan" className="hover:text-black transition">
               Keunggulan
             </a>
@@ -123,7 +128,17 @@ export default function HomePage() {
             </a>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <Link href="/orders">
+              <Button
+                variant="outline"
+                size="default"
+                className="rounded-full border-[#d8d5c7] bg-white hover:bg-[#faf9f5] font-bold text-xs sm:text-sm px-4 gap-1.5 text-[#24251f] shadow-2xs"
+              >
+                <Flaticon name="truck-side" className="text-sm text-[#90802a]" />
+                <span className="hidden xs:inline">Pantau</span> Pesanan
+              </Button>
+            </Link>
             <Link href="/catalog">
               <Button
                 variant="secondary"
@@ -509,6 +524,171 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ALUR PEMESANAN PRAKTIS */}
+      <section id="alur-pemesanan" className="py-16 sm:py-24 border-y border-[#e7e4d8] bg-white">
+        <div className="mx-auto max-w-7xl px-5 sm:px-10">
+          <div className="text-center max-w-2xl mx-auto">
+            <Badge variant="outline" className="border-[#d5d1c2] bg-[#fdfcf7] text-[#867100] font-bold px-3 py-1 text-xs">
+              <Flaticon name="route" className="text-xs mr-1.5" />
+              Cara Pesan Mudah
+            </Badge>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl text-[#1e1f1a]">
+              Alur Pemesanan Cepat &amp; Praktis
+            </h2>
+            <p className="mt-3 text-[#69665c] leading-relaxed text-sm sm:text-base">
+              Belanja oleh-oleh khas Dieng tanpa perlu mengantre atau macet di jalan. Cukup 4 langkah dari ponsel Anda, kurir siap mengantar ke depan pintu penginapan.
+            </p>
+          </div>
+
+          {/* 4 Process Cards */}
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Step 1 */}
+            <Card className="relative rounded-3xl border-[#e8e5dc] bg-gradient-to-br from-[#faf8ed] via-white to-[#fbfaf3] p-6 shadow-xs hover:shadow-md transition flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f4ce00] text-black font-black text-base shadow-xs">
+                    01
+                  </span>
+                  <Badge variant="outline" className="border-[#ded9cb] bg-white text-[11px] font-bold text-[#8a7200]">
+                    Bebas Campur
+                  </Badge>
+                </div>
+                <h3 className="text-lg font-bold text-[#24251f] flex items-center gap-2">
+                  <Flaticon name="shopping-bag" className="text-base text-[#90802a]" />
+                  <span>Pilih Produk</span>
+                </h3>
+                <p className="mt-2 text-xs text-[#6e6c62] leading-relaxed">
+                  Buka katalog dan pilih aneka manisan Carica, Mie Ongklok, Pitos, Keripik Jamur, atau Purwaceng. Minimal pemesanan 5 paket (bebas kombinasikan varian).
+                </p>
+              </div>
+
+              <div className="mt-5 pt-3 border-t border-[#eee9db]">
+                <span className="text-[11px] font-semibold text-[#8a7200] flex items-center gap-1">
+                  <Flaticon name="check-circle" className="text-[10px]" />
+                  9 Pilihan menu autentik Dieng
+                </span>
+              </div>
+            </Card>
+
+            {/* Step 2 */}
+            <Card className="relative rounded-3xl border-[#e8e5dc] bg-white p-6 shadow-xs hover:shadow-md transition flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#292a23] text-white font-black text-base shadow-xs">
+                    02
+                  </span>
+                  <Badge variant="outline" className="border-[#ded9cb] bg-[#faf9f5] text-[11px] font-bold text-[#8a7200]">
+                    Radius 8 KM
+                  </Badge>
+                </div>
+                <h3 className="text-lg font-bold text-[#24251f] flex items-center gap-2">
+                  <Flaticon name="marker" className="text-base text-[#90802a]" />
+                  <span>Titik Pengantaran</span>
+                </h3>
+                <p className="mt-2 text-xs text-[#6e6c62] leading-relaxed">
+                  Tentukan alamat hotel, villa, atau homestay Anda di sekitar Dieng. Anda bisa memilih pin lokasi Google Maps secara presisi untuk mempermudah kurir.
+                </p>
+              </div>
+
+              <div className="mt-5 pt-3 border-t border-[#efeee9]">
+                <span className="text-[11px] font-semibold text-[#8a7200] flex items-center gap-1">
+                  <Flaticon name="check-circle" className="text-[10px]" />
+                  Dieng Kulon, Wetan, Sikunir tercover
+                </span>
+              </div>
+            </Card>
+
+            {/* Step 3 */}
+            <Card className="relative rounded-3xl border-[#e8e5dc] bg-gradient-to-br from-[#faf8ed] via-white to-[#fbfaf3] p-6 shadow-xs hover:shadow-md transition flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f4ce00] text-black font-black text-base shadow-xs">
+                    03
+                  </span>
+                  <Badge variant="outline" className="border-[#ded9cb] bg-white text-[11px] font-bold text-[#8a7200]">
+                    QRIS &amp; COD
+                  </Badge>
+                </div>
+                <h3 className="text-lg font-bold text-[#24251f] flex items-center gap-2">
+                  <Flaticon name="qr" className="text-base text-[#90802a]" />
+                  <span>Pilih Pembayaran</span>
+                </h3>
+                <p className="mt-2 text-xs text-[#6e6c62] leading-relaxed">
+                  Pilih bayar digital instan via barcode QRIS (GoPay, OVO, ShopeePay, m-Banking) atau bayar tunai di tempat (COD) saat kurir sampai di penginapan Anda.
+                </p>
+              </div>
+
+              <div className="mt-5 pt-3 border-t border-[#eee9db]">
+                <span className="text-[11px] font-semibold text-[#8a7200] flex items-center gap-1">
+                  <Flaticon name="check-circle" className="text-[10px]" />
+                  Tanpa repot transfer manual
+                </span>
+              </div>
+            </Card>
+
+            {/* Step 4 */}
+            <Card className="relative rounded-3xl border-[#e8e5dc] bg-white p-6 shadow-xs hover:shadow-md transition flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#292a23] text-[#f4ce00] font-black text-base shadow-xs">
+                    04
+                  </span>
+                  <Badge variant="outline" className="border-[#ded9cb] bg-[#faf9f5] text-[11px] font-bold text-[#8a7200]">
+                    Input No. WA
+                  </Badge>
+                </div>
+                <h3 className="text-lg font-bold text-[#24251f] flex items-center gap-2">
+                  <Flaticon name="truck-side" className="text-base text-[#90802a]" />
+                  <span>Pantau Pengantaran</span>
+                </h3>
+                <p className="mt-2 text-xs text-[#6e6c62] leading-relaxed">
+                  Setelah checkout, Anda diarahkan ke laman pantau. Jika browser ditutup atau reload, cukup masukkan nomor WhatsApp Anda di menu Pantau Pesanan kapan saja!
+                </p>
+              </div>
+
+              <div className="mt-5 pt-3 border-t border-[#efeee9]">
+                <span className="text-[11px] font-semibold text-[#8a7200] flex items-center gap-1">
+                  <Flaticon name="check-circle" className="text-[10px]" />
+                  Status tidak hilang saat reload
+                </span>
+              </div>
+            </Card>
+          </div>
+
+          {/* Quick Action Navigation Bar inside flow section */}
+          <div className="mt-12 rounded-3xl border border-[#e4e1d7] bg-[#faf9f5] p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#292a23] text-[#f4ce00] shrink-0 shadow-xs">
+                <Flaticon name="truck-side" className="text-xl" />
+              </span>
+              <div>
+                <h4 className="text-base font-extrabold text-[#24251f]">
+                  Sudah Pernah Memesan Sebelumnya?
+                </h4>
+                <p className="text-xs text-[#727168] mt-0.5">
+                  Cek posisi kurir dan status pesanan Anda hanya dengan memasukkan nomor WhatsApp.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <Link href="/orders" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full sm:w-auto rounded-xl border-[#d8d5c7] bg-white hover:bg-[#f5f4ed] font-bold text-xs sm:text-sm px-5 text-[#24251f]">
+                  <Flaticon name="search" className="text-xs mr-1.5 text-[#90802a]" />
+                  <span>Pantau Pesanan Saya</span>
+                </Button>
+              </Link>
+              <Link href="/catalog" className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto rounded-xl bg-[#292a23] hover:bg-black font-extrabold text-xs sm:text-sm px-6 text-white shadow-sm">
+                  <span>Mulai Belanja</span>
+                  <Flaticon name="arrow-right" className="text-xs ml-1.5" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* LOCAL HERITAGE CALLOUT BANNER */}
       <section className="mx-auto max-w-7xl px-5 sm:px-10 pb-16 sm:pb-24">
         <div className="rounded-[2.5rem] bg-gradient-to-r from-[#292a23] to-[#1c1d18] text-white p-8 sm:p-14 shadow-xl relative overflow-hidden">
@@ -546,12 +726,12 @@ export default function HomePage() {
           <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-5">
             {/* Column 1: Brand & About */}
             <div className="lg:col-span-2 space-y-4">
-              <Link href="/" className="inline-block">
+              <Link href="/" className="inline-flex items-center gap-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#292a23] text-[#f4ce00] shadow-xs">
+                  <Flaticon name="sparkles" variant="sr" className="text-base" />
+                </span>
                 <span className="text-2xl font-black tracking-tight text-[#24251f]">
-                  dioleh<span className="text-[#c4a000]">2</span>
-                  <span className="ml-1.5 text-xs font-extrabold tracking-[0.2em] text-[#8c8a7e]">
-                    DIENG
-                  </span>
+                  KARIKA<span className="text-[#90802a] ml-1">DIENG</span>
                 </span>
               </Link>
               <p className="text-sm text-[#66645a] leading-relaxed max-w-sm">
@@ -608,8 +788,19 @@ export default function HomePage() {
               </h3>
               <ul className="space-y-2 text-sm text-[#66645a]">
                 <li>
+                  <Link href="/orders" className="hover:text-black transition font-bold text-[#8a7200] flex items-center gap-1">
+                    <Flaticon name="truck-side" className="text-xs" />
+                    <span>Pantau Status Pesanan</span>
+                  </Link>
+                </li>
+                <li>
+                  <a href="#alur-pemesanan" className="hover:text-black transition">
+                    Alur &amp; Cara Pesan
+                  </a>
+                </li>
+                <li>
                   <Link href="/catalog" className="hover:text-black transition">
-                    Cara Pesan &amp; Minimal Order
+                    Minimal Belanja (5 Paket)
                   </Link>
                 </li>
                 <li>

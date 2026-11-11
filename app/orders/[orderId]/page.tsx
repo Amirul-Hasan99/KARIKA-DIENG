@@ -188,12 +188,21 @@ export default function OrderTrackingPage() {
             className="inline-flex items-center gap-2 text-sm font-medium text-[#73736b] hover:text-[#292a23] transition"
           >
             <Flaticon name="arrow-left" className="text-xs" />
-            <span>Kembali ke katalog</span>
+            <span>Katalog</span>
           </Link>
-          <span className="text-xs font-semibold uppercase tracking-wider text-[#938126] flex items-center gap-1.5">
-            <Flaticon name="badge-check" variant="sr" className="text-sm text-[#b69b00]" />
-            Karika Dieng · Dioleh2
-          </span>
+          <div className="flex items-center gap-2.5">
+            <Link
+              href="/orders"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#d8d5c7] bg-white px-3 py-1 text-xs font-bold text-[#24251f] hover:bg-[#faf9f5] transition shadow-2xs"
+            >
+              <Flaticon name="search" className="text-xs text-[#90802a]" />
+              <span>Cari dengan No. WA</span>
+            </Link>
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#938126] hidden sm:flex items-center gap-1.5">
+              <Flaticon name="badge-check" variant="sr" className="text-sm text-[#b69b00]" />
+              Karika Dieng
+            </span>
+          </div>
         </div>
 
         {error && !order ? (
@@ -517,6 +526,30 @@ export default function OrderTrackingPage() {
                   <p className="mt-2 text-center text-xs text-[#85857c]">
                     Admin toko akan langsung mengecek kesiapan paket dan mengabari kurir pengantar.
                   </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Reload & Re-open Help Card */}
+            <div className="rounded-3xl border border-[#e4e1d7] bg-[#faf9f5] p-5 text-xs text-[#727168] flex items-start gap-3 shadow-2xs">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-[#90802a] shrink-0 mt-0.5">
+                <Flaticon name="info" className="text-sm" />
+              </span>
+              <div>
+                <p className="font-bold text-[#24251f] text-sm">
+                  Ingin cek status pesanan ini lagi jika web ditutup?
+                </p>
+                <p className="mt-1 leading-relaxed text-xs">
+                  Nomor WhatsApp Anda (<strong>{order.customer_phone}</strong>) sudah tersimpan di sistem. Jika Anda reload halaman atau menutup browser, Anda dapat memantau kembali pengantaran cukup dengan membuka menu <strong>Pantau Pesanan</strong> dan mengisi nomor telepon Anda.
+                </p>
+                <div className="mt-3">
+                  <Link
+                    href={`/orders?phone=${encodeURIComponent(order.customer_phone || "")}`}
+                    className="inline-flex items-center gap-1.5 font-bold text-[#90802a] hover:underline"
+                  >
+                    <span>Uji Cari Pesanan dengan Nomor HP</span>
+                    <Flaticon name="arrow-right" className="text-[10px]" />
+                  </Link>
                 </div>
               </div>
             </div>

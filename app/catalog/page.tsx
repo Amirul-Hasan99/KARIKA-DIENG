@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import confetti from "canvas-confetti";
 import DeliveryLocationPicker from "@/components/customer/DeliveryLocationPicker";
 import { Flaticon } from "@/components/ui/Flaticon";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +44,21 @@ export default function CatalogPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [payment, setPayment] = useState<"qris" | "cod">("qris");
+  const [createdSuccessOrder, setCreatedSuccessOrder] = useState<ActiveOrderState | null>(null);
+  const [countdown, setCountdown] = useState<number>(5);
+
+  // Auto-redirect countdown to tracking page when checkout succeeds
+  useEffect(() => {
+    if (!createdSuccessOrder) return;
+    if (countdown <= 0) {
+      location.assign(`/orders/${createdSuccessOrder.orderId}`);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setCountdown((c) => c - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [createdSuccessOrder, countdown]);
 
   // Load latest live products & stock from admin API
   useEffect(() => {
@@ -210,8 +226,14 @@ export default function CatalogPage() {
       localStorage.setItem("karika_active_order", JSON.stringify(activeOrderData));
       localStorage.removeItem("karika_cart");
       setCart({});
+      setCheckout(false);
+      setBusy(false);
+      setCreatedSuccessOrder(activeOrderData);
+      setCountdown(5);
 
-      location.assign(`/orders/${data.orderId}`);
+      try {
+        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+      } catch {}
     } catch (e) {
       setError(e instanceof Error ? e.message : "Checkout gagal. Coba lagi.");
       setBusy(false);
@@ -229,16 +251,18 @@ export default function CatalogPage() {
       <header className="sticky top-0 z-20 border-b border-[#e9e7dc] bg-[#f8f7f2]/95 backdrop-blur">
         <nav className="mx-auto flex h-[68px] max-w-7xl items-center justify-between px-4 sm:px-8">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-xl font-black tracking-tight">
-              dioleh<span className="text-[#b69b00]">2</span>
-              <span className="ml-2 text-[10px] font-bold tracking-[.22em] text-[#858585]">
-                DIENG
+            <Link href="/" className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#292a23] text-[#f4ce00] shadow-xs">
+                <Flaticon name="sparkles" variant="sr" className="text-sm" />
+              </span>
+              <span className="text-xl font-black tracking-tight text-[#24251f]">
+                KARIKA<span className="text-[#90802a] ml-1">DIENG</span>
               </span>
             </Link>
             <Link
               href="/admin/login"
               aria-label="Login admin"
-              title="Admin"
+              title="Portal Admin"
               className="grid h-8 w-8 place-items-center rounded-full border border-[#e3e0d5] bg-white text-[#77756f] hover:text-black transition"
             >
               <Flaticon name="lock" className="text-xs" />
@@ -555,6 +579,73 @@ export default function CatalogPage() {
                   </Button>
                 )}
               </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* POP-UP MODAL PESANAN BERHASIL */}
+      {createdSuccessOrder && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in duration-200">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-label="Pesanan Berhasil Dibuat"
+            className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white p-6 sm:p-8 text-center shadow-2xl border border-emerald-100"
+          >
+            {/* Animated check badge */}
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-emerald-50 text-emerald-600 border border-emerald-200 mb-4 shadow-sm animate-bounce">
+              <Flaticon name="check" className="text-3xl font-black text-emerald-600" />
+            </div>
+
+            <Badge className="bg-emerald-100 text-emerald-900 border-emerald-300 font-extrabold text-xs px-3 py-1 mb-2">
+              Pesanan Sukses Diterima Toko
+            </Badge>
+
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-[#24251f]">
+              Pesanan Berhasil Dibuat!
+            </h2>
+            <p className="mt-2 text-xs sm:text-sm text-[#727168] leading-relaxed">
+              Terima kasih, <strong>{createdSuccessOrder.customerName}</strong>! Pesanan oleh-oleh Anda telah kami catat dan segera disiapkan untuk diantar ke penginapan Anda di Dieng.
+            </p>
+
+            {/* Order Details Card */}
+            <div className="mt-5 rounded-2xl border border-[#e8e5dc] bg-[#faf9f5] p-4 text-left space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#727168]">Nomor Pesanan:</span>
+                <span className="font-mono font-black text-[#90802a]">
+                  #{createdSuccessOrder.orderNumber}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#727168]">Total Tagihan:</span>
+                <span className="font-black text-[#24251f]">
+                  {rupiah(createdSuccessOrder.totalAmount || total)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#727168]">Metode Pembayaran:</span>
+                <span className="font-bold text-slate-800 uppercase">
+                  {createdSuccessOrder.paymentType === "cash" ? "Bayar Tunai (COD)" : "QRIS Midtrans"}
+                </span>
+              </div>
+              <div className="pt-2 border-t border-[#eae7dc] text-[11px] text-[#727168]">
+                <Flaticon name="info" className="text-xs mr-1 text-[#90802a]" />
+                Nomor WhatsApp <strong>{createdSuccessOrder.customerPhone}</strong> tersimpan otomatis. Jika reload atau tutup halaman, Anda dapat memantau status pesanan kapan saja dengan mengisi nomor ini di menu <strong>Pantau Pesanan</strong>.
+              </div>
+            </div>
+
+            {/* Countdown / CTA buttons */}
+            <div className="mt-6 space-y-2.5">
+              <Link href={`/orders/${createdSuccessOrder.orderId}`}>
+                <Button className="w-full h-12 rounded-2xl bg-[#292a23] hover:bg-black font-extrabold text-sm text-white shadow-md transition gap-2">
+                  <span>Lihat Pembayaran &amp; Pantau Pengantaran</span>
+                  <Flaticon name="arrow-right" className="text-xs" />
+                </Button>
+              </Link>
+              <p className="text-[11px] text-[#8c8980]">
+                Otomatis dialihkan ke halaman pantau dalam <strong>{countdown} detik</strong>...
+              </p>
             </div>
           </section>
         </div>
