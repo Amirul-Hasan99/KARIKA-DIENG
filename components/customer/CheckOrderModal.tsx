@@ -4,17 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/useCartStore";
 import { formatRupiah } from "@/lib/utils";
-import {
-  Search,
-  Receipt,
-  ArrowRight,
-  Clock,
-  X,
-  Coffee,
-  AlertCircle,
-  Sparkles,
-  ExternalLink,
-} from "lucide-react";
+import Flaticon from "@/components/ui/Flaticon";
 
 interface CheckOrderModalProps {
   isOpen: boolean;
@@ -81,7 +71,7 @@ export default function CheckOrderModal({
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm shadow-amber-500/20">
-              <Receipt className="h-5 w-5" strokeWidth={2} />
+              <Flaticon name="receipt" className="text-lg" />
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900">
@@ -96,7 +86,7 @@ export default function CheckOrderModal({
             onClick={onClose}
             className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
           >
-            <X className="h-5 w-5" />
+            <Flaticon name="cross" className="text-sm" />
           </button>
         </div>
 
@@ -109,7 +99,7 @@ export default function CheckOrderModal({
             </label>
             <form onSubmit={handleSearch} className="flex gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Flaticon name="search" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-400" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -129,7 +119,7 @@ export default function CheckOrderModal({
 
             {searchError && (
               <p className="mt-2 text-xs text-rose-600 flex items-center gap-1">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                <Flaticon name="exclamation" className="text-xs shrink-0" />
                 {searchError}
               </p>
             )}
@@ -163,7 +153,7 @@ export default function CheckOrderModal({
                       </p>
                     </div>
                     <button className="flex items-center gap-1 rounded-lg bg-amber-500 px-2.5 py-1 text-xs font-bold text-white shadow-2xs group-hover:bg-amber-600 transition shrink-0">
-                      Buka <ArrowRight className="h-3.5 w-3.5" />
+                      Buka <Flaticon name="arrow-right" className="text-[10px]" />
                     </button>
                   </div>
                 ))}
@@ -175,7 +165,7 @@ export default function CheckOrderModal({
           <div>
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5 text-amber-500" />
+                <Flaticon name="time-fast" className="text-xs text-amber-500" />
                 Pesanan Terakhir di Perangkat Ini
               </h4>
               {recentOrders && recentOrders.length > 0 && (
@@ -187,7 +177,7 @@ export default function CheckOrderModal({
 
             {(!recentOrders || recentOrders.length === 0) ? (
               <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-6 text-center">
-                <Coffee className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                <Flaticon name="box-alt" className="text-2xl text-slate-300 mx-auto mb-2" />
                 <p className="text-xs font-semibold text-slate-600">
                   Belum ada riwayat pesanan di perangkat ini
                 </p>
@@ -219,7 +209,7 @@ export default function CheckOrderModal({
                           </span>
                           {isLastActive && (
                             <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 animate-pulse">
-                              <Sparkles className="h-3 w-3" /> Sedang Aktif
+                              <Flaticon name="sparkles" className="text-[10px]" /> Sedang Aktif
                             </span>
                           )}
                         </div>
@@ -239,7 +229,7 @@ export default function CheckOrderModal({
 
                       <div className="flex items-center gap-1.5 shrink-0 text-amber-600 font-bold text-xs group-hover:translate-x-0.5 transition-transform">
                         <span>Pantau</span>
-                        <ArrowRight className="h-4 w-4" />
+                        <Flaticon name="arrow-right" className="text-xs" />
                       </div>
                     </div>
                   );

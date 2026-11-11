@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import QRCode from "qrcode";
 import { formatRupiah } from "@/lib/utils";
-import { Clock, ShieldCheck, Sparkles, Smartphone, CheckCircle2 } from "lucide-react";
+import Flaticon from "@/components/ui/Flaticon";
 
 interface QrisDisplayProps {
   orderNumber: string;
@@ -138,7 +138,7 @@ export default function QrisDisplay({
 
         {/* Timer countdown */}
         <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
-          <Clock className="h-3.5 w-3.5 text-amber-500 animate-pulse" />
+          <Flaticon name="time-fast" className="text-xs text-amber-500 animate-pulse" />
           <span>
             Kadaluarsa dalam:{" "}
             <strong className="font-mono text-slate-800 font-bold">{formattedTime}</strong>

@@ -32,6 +32,7 @@ export async function middleware(request: NextRequest) {
   const isPublicApi = path === "/api/orders/checkout" || path === "/api/midtrans/webhook";
   const publicRead =
     (path === "/api/seed" && request.method === "GET") ||
+    (path === "/api/products" && request.method === "GET") ||
     (/^\/api\/orders\/[^/]+$/.test(path) && request.method === "GET") ||
     (path === "/api/orders/search" && request.method === "GET");
   const protectedPage = path === "/admin" || path.startsWith("/admin/");

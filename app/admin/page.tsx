@@ -32,7 +32,9 @@ import {
   Package,
   Layers,
   Calendar,
-} from "lucide-react";
+} from "@/components/ui/FlaticonCompat";
+import Flaticon from "@/components/ui/Flaticon";
+import { KarikaProduct, INITIAL_KARIKA_PRODUCTS, KARIKA_CATEGORIES } from "@/lib/karika-products-data";
 
 export default function AdminDashboardPage() {
   const {
@@ -67,20 +69,22 @@ export default function AdminDashboardPage() {
   });
   const [currentTime, setCurrentTime] = useState<number>(Date.now());
 
-  // Stock management state
-  const [menus, setMenus] = useState<MenuItem[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  // Product & Stock management state (Unified Karika Dieng Catalog)
+  const [products, setProducts] = useState<KarikaProduct[]>(INITIAL_KARIKA_PRODUCTS);
+  const [productCategoryFilter, setProductCategoryFilter] = useState<string>("Semua");
   const [isStockLoading, setIsStockLoading] = useState(false);
-  const [updatingMenuId, setUpdatingMenuId] = useState<string | null>(null);
+  const [updatingProductId, setUpdatingProductId] = useState<string | null>(null);
+  const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
+  const [editPriceVal, setEditPriceVal] = useState<number>(0);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(Date.now()), 30000);
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch menus for stock tab
+  // Fetch products for stock tab
   useEffect(() => {
-    if (activeTab === "stock" && menus.length === 0) {
+    if (activeTab === "stock") {
       loadCatalogStock();
     }
   }, [activeTab]);
@@ -88,42 +92,65 @@ export default function AdminDashboardPage() {
   const loadCatalogStock = async () => {
     setIsStockLoading(true);
     try {
-      const res = await fetch("/api/seed");
+      const res = await fetch("/api/products", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
-        setCategories(data.categories || []);
-        setMenus(data.menus || []);
+        if (Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+        }
       }
     } catch (e) {
-      console.error("Failed to load catalog stock:", e);
+      console.error("Failed to load catalog products:", e);
     } finally {
       setIsStockLoading(false);
     }
   };
 
-  const handleToggleStock = async (menuId: string, currentAvailable: boolean) => {
-    setUpdatingMenuId(menuId);
+  const handleToggleStock = async (productId: string, currentAvailable: boolean) => {
+    setUpdatingProductId(productId);
     const newStatus = !currentAvailable;
 
     // Optimistic update
-    setMenus((prev) =>
-      prev.map((m) => (m.id === menuId ? { ...m, is_available: newStatus } : m))
+    setProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, is_available: newStatus } : p))
     );
 
     try {
-      await fetch("/api/menus/stock", {
+      await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ menuId, isAvailable: newStatus }),
+        body: JSON.stringify({ id: productId, is_available: newStatus }),
       });
     } catch (e) {
-      console.error("Error toggling menu stock:", e);
+      console.error("Error toggling product stock:", e);
       // Rollback if error
-      setMenus((prev) =>
-        prev.map((m) => (m.id === menuId ? { ...m, is_available: currentAvailable } : m))
+      setProducts((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, is_available: currentAvailable } : p))
       );
     } finally {
-      setUpdatingMenuId(null);
+      setUpdatingProductId(null);
+    }
+  };
+
+  const handleSavePrice = async (productId: string) => {
+    if (editPriceVal <= 0) return;
+    setUpdatingProductId(productId);
+
+    setProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, price: editPriceVal } : p))
+    );
+
+    try {
+      await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: productId, price: editPriceVal }),
+      });
+      setEditingPriceId(null);
+    } catch (e) {
+      console.error("Error updating price:", e);
+    } finally {
+      setUpdatingProductId(null);
     }
   };
 
@@ -384,33 +411,33 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 px-3.5 py-2.5 sm:px-6 sm:py-3.5 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-[#e9e7df] bg-white/95 px-3.5 py-2.5 sm:px-6 sm:py-3.5 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2.5 sm:gap-4">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <Link
               href="/"
-              className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-sm sm:shadow-md shadow-amber-500/20 hover:opacity-95 transition"
-              title="Dioleh2 — Beranda"
+              className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#292a23] to-[#454639] text-[#f4ce00] shadow-md shadow-black/10 hover:opacity-95 transition"
+              title="Karika Dieng — Beranda"
             >
-              <Coffee className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2} />
+              <Flaticon name="sparkles" variant="sr" className="text-xl text-[#f4ce00]" />
             </Link>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <h1 className="text-sm sm:text-lg font-black tracking-tight text-slate-900 truncate">
-                  <span className="sm:hidden">Admin Dioleh2</span>
-                  <span className="hidden sm:inline">OPERASIONAL DIOLEH2</span>
+                <h1 className="text-sm sm:text-lg font-black tracking-tight text-[#24251f] truncate">
+                  <span className="sm:hidden">Admin Karika</span>
+                  <span className="hidden sm:inline">KARIKA DIENG • ADMIN OPERASIONAL</span>
                 </h1>
-                <span className="hidden sm:inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200 shrink-0">
-                  OLEH-OLEH DIENG
+                <span className="hidden sm:inline-flex rounded-full bg-[#f4ce00]/20 px-2.5 py-0.5 text-[10px] font-black text-[#857200] border border-[#f4ce00]/40 shrink-0">
+                  DIENG WONOSOBO
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-500 truncate max-w-[190px] xs:max-w-xs sm:max-w-none">
-                Panel internal Dioleh2
+              <p className="text-[11px] sm:text-xs text-[#727168] truncate max-w-[190px] xs:max-w-xs sm:max-w-none">
+                Pusat Pengelolaan Produk, Transaksi &amp; Pengantaran 8 KM
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {/* Audio chime toggle */}
             <button
               onClick={() => {
@@ -420,33 +447,38 @@ export default function AdminDashboardPage() {
               }}
               className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold transition border ${
                 soundEnabled
-                  ? "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100"
+                  ? "bg-[#faf8ed] text-[#857200] border-[#ecd983] hover:bg-[#f6f2d9]"
                   : "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200"
               }`}
               title={soundEnabled ? "Notifikasi Suara Aktif" : "Notifikasi Suara Mati"}
             >
               {soundEnabled ? (
                 <>
-                  <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-600" />
-                  <span className="hidden sm:inline">Suara: ON</span>
+                  <Flaticon name="bell" className="text-xs text-[#857200]" />
+                  <span className="hidden sm:inline">Bel: ON</span>
                 </>
               ) : (
                 <>
-                  <BellOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Suara: OFF</span>
+                  <Flaticon name="bell-ring" className="text-xs text-slate-400" />
+                  <span className="hidden sm:inline">Bel: OFF</span>
                 </>
               )}
             </button>
 
             <Link
               href="/catalog"
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+              className="flex items-center gap-1.5 rounded-xl border border-[#e4e1d7] bg-white px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-[#24251f] hover:bg-[#faf9f5] transition"
             >
-              <span>Lihat katalog</span>
-              <ExternalLink className="h-3.5 w-3.5" />
+              <Flaticon name="shop" className="text-xs text-[#90802a]" />
+              <span>Katalog</span>
             </Link>
-            <Link href="/admin/delivery" className="flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-amber-900 hover:bg-amber-100 transition">
-              <span>Pesanan & pengiriman</span>
+            <Link
+              href="/admin/delivery"
+              className="flex items-center gap-1.5 rounded-xl border border-[#ecd983] bg-[#faf8ed] px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-[#857200] hover:bg-[#f6f2d9] transition"
+            >
+              <Flaticon name="truck-side" className="text-xs text-[#857200]" />
+              <span className="hidden sm:inline">Pantau Pengantaran</span>
+              <span className="sm:hidden">Kurir</span>
             </Link>
             <button
               type="button"
@@ -454,8 +486,11 @@ export default function AdminDashboardPage() {
                 try { await fetch("/api/admin/logout", { method: "POST" }); } catch {}
                 window.location.replace("/admin/login");
               }}
-              className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-black"
-            >Keluar</button>
+              className="flex items-center gap-1.5 rounded-xl bg-[#292a23] hover:bg-black px-3 py-2 text-xs font-bold text-white transition"
+            >
+              <Flaticon name="exit" className="text-xs" />
+              <span className="hidden xs:inline">Keluar</span>
+            </button>
           </div>
         </div>
       </header>
@@ -580,12 +615,15 @@ export default function AdminDashboardPage() {
               onClick={() => setActiveTab("stock")}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition whitespace-nowrap ${
                 activeTab === "stock"
-                  ? "bg-slate-900 text-white shadow-xs"
+                  ? "bg-[#292a23] text-white shadow-xs"
                   : "text-slate-600 hover:bg-slate-100"
               }`}
             >
-              <Package className="h-4 w-4" />
-              <span>Kelola Stok Menu</span>
+              <Flaticon name="box-alt" className="text-xs" />
+              <span>Kelola Produk &amp; Stok</span>
+              <span className="rounded-full bg-[#f4ce00] px-1.5 py-0.2 text-[10px] text-black font-extrabold">
+                {products.length}
+              </span>
             </button>
           </div>
 
@@ -1073,76 +1111,212 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* View 4: Stock Management (Kelola Stok Menu Habis / Tersedia) */}
+        {/* View 4: Stock & Product Management (Kelola Produk & Stok Karika Dieng) */}
         {activeTab === "stock" && (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">
-                  Manajemen Ketersediaan Menu (Sold Out Toggle)
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Jika bahan baku habis, klik tombol toggle untuk menonaktifkan menu. Perubahan langsung tampil di HP pelanggan secara real-time.
-                </p>
+          <div className="space-y-5">
+            {/* Control Panel & Filters */}
+            <div className="rounded-3xl border border-[#e9e7df] bg-white p-5 shadow-xs">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#faf8ed] text-[#857200] border border-[#ecd983]">
+                      <Flaticon name="box-alt" className="text-sm" />
+                    </div>
+                    <h3 className="text-base font-extrabold text-[#24251f]">
+                      Manajemen Produk &amp; Stok Katalog Karika Dieng
+                    </h3>
+                  </div>
+                  <p className="text-xs text-[#727168] mt-1 max-w-2xl">
+                    Produk di bawah ini tersinkronisasi 100% dengan katalog pembeli. Jika stok fisik habis atau harga berubah, ubah status di sini dan katalog pembeli akan langsung terupdate real-time.
+                  </p>
+                </div>
+
+                {/* Stock Stats Pills */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+                    <Flaticon name="check-circle" className="text-xs text-emerald-600" />
+                    <span>{products.filter((p) => p.is_available !== false).length} Tersedia</span>
+                  </span>
+                  <span className="rounded-xl bg-rose-50 border border-rose-200 px-3 py-1.5 text-xs font-bold text-rose-800 flex items-center gap-1.5">
+                    <Flaticon name="cross-circle" className="text-xs text-rose-600" />
+                    <span>{products.filter((p) => p.is_available === false).length} Habis</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Category Filter Chips */}
+              <div className="mt-4 pt-4 border-t border-[#efeee9] flex items-center gap-2 overflow-x-auto pb-1">
+                <span className="text-xs font-bold text-[#85857f] uppercase tracking-wider mr-1">
+                  Kategori:
+                </span>
+                {["Semua", "Carica", "Makanan", "Camilan", "Minuman"].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setProductCategoryFilter(cat)}
+                    className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
+                      productCategoryFilter === cat
+                        ? "bg-[#292a23] text-white shadow-xs"
+                        : "bg-[#faf9f5] border border-[#e4e1d7] text-[#66665e] hover:bg-white"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
               </div>
             </div>
 
             {isStockLoading ? (
-              <div className="py-12 text-center text-xs text-slate-400">
-                Memuat data katalog menu...
+              <div className="py-16 text-center text-xs text-slate-400">
+                <Flaticon name="spinner" className="text-2xl animate-spin text-[#90802a] mx-auto mb-2" />
+                <p>Memuat katalog produk Karika Dieng...</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {menus.map((menu) => {
-                  const isAvailable = menu.is_available !== false;
-                  const isUpdating = updatingMenuId === menu.id;
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {products
+                  .filter(
+                    (p) =>
+                      productCategoryFilter === "Semua" || p.group === productCategoryFilter
+                  )
+                  .map((product) => {
+                    const isAvailable = product.is_available !== false;
+                    const isUpdating = updatingProductId === product.id;
+                    const isEditingPrice = editingPriceId === product.id;
 
-                  return (
-                    <div
-                      key={menu.id}
-                      className={`flex items-center justify-between rounded-2xl border p-3.5 transition ${
-                        isAvailable
-                          ? "bg-white border-slate-200"
-                          : "bg-slate-50 border-rose-200 opacity-80"
-                      }`}
-                    >
-                      <div className="min-w-0 pr-3">
-                        <h4 className="text-xs font-bold text-slate-900 truncate">
-                          {menu.name}
-                        </h4>
-                        <p className="text-[11px] text-slate-500">
-                          {formatRupiah(menu.price)}
-                        </p>
-                        <span
-                          className={`inline-block mt-1 text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded ${
-                            isAvailable
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-rose-100 text-rose-800"
-                          }`}
-                        >
-                          {isAvailable ? "Tersedia" : "Habis (Sold Out)"}
-                        </span>
-                      </div>
-
-                      <button
-                        type="button"
-                        disabled={isUpdating}
-                        onClick={() => handleToggleStock(menu.id, isAvailable)}
-                        className={`rounded-xl px-3 py-1.5 text-xs font-bold transition disabled:opacity-50 ${
+                    return (
+                      <div
+                        key={product.id}
+                        className={`rounded-3xl border transition-all overflow-hidden flex flex-col justify-between ${
                           isAvailable
-                            ? "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
-                            : "bg-emerald-600 text-white hover:bg-emerald-700"
+                            ? "bg-white border-[#e9e7df] shadow-xs hover:shadow-md"
+                            : "bg-[#faf9f6] border-rose-200 opacity-85"
                         }`}
                       >
-                        {isUpdating
-                          ? "Menyimpan..."
-                          : isAvailable
-                          ? "Set Habis"
-                          : "Set Tersedia"}
-                      </button>
-                    </div>
-                  );
-                })}
+                        <div>
+                          {/* Image Thumbnail & Status Badge */}
+                          <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#eeece4]">
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="h-full w-full object-cover"
+                            />
+                            <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                              <span className="rounded-full bg-[#292a23]/90 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-xs">
+                                {product.group}
+                              </span>
+                              <span className="rounded-full bg-white/95 px-2.5 py-0.5 text-[10px] font-semibold text-slate-800 shadow-xs">
+                                {product.pack}
+                              </span>
+                            </div>
+
+                            <span
+                              className={`absolute top-2.5 right-2.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider shadow-xs ${
+                                isAvailable
+                                  ? "bg-emerald-600 text-white"
+                                  : "bg-rose-600 text-white"
+                              }`}
+                            >
+                              {isAvailable ? "Tersedia" : "Stok Habis"}
+                            </span>
+                          </div>
+
+                          {/* Content */}
+                          <div className="p-4 sm:p-5">
+                            <h4 className="text-base font-extrabold text-[#24251f]">
+                              {product.name}
+                            </h4>
+                            <p className="mt-1 text-xs text-[#74736b] line-clamp-2 leading-relaxed">
+                              {product.description}
+                            </p>
+
+                            {/* Price & Edit Block */}
+                            <div className="mt-4 pt-3 border-t border-[#efeee9] flex items-center justify-between">
+                              <div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-[#958329]">
+                                  Harga Jual (Paket)
+                                </span>
+                                {isEditingPrice ? (
+                                  <div className="mt-1 flex items-center gap-1.5">
+                                    <input
+                                      type="number"
+                                      value={editPriceVal}
+                                      onChange={(e) => setEditPriceVal(Number(e.target.value))}
+                                      className="w-28 rounded-lg border border-[#f4ce00] px-2 py-1 text-xs font-bold text-[#24251f] outline-none"
+                                      autoFocus
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSavePrice(product.id)}
+                                      className="rounded-lg bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white hover:bg-emerald-700"
+                                    >
+                                      Simpan
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingPriceId(null)}
+                                      className="rounded-lg bg-slate-200 px-2 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-300"
+                                    >
+                                      Batal
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-lg font-black text-[#24251f]">
+                                      {formatRupiah(product.price)}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingPriceId(product.id);
+                                        setEditPriceVal(product.price);
+                                      }}
+                                      className="text-[10px] font-bold text-[#8a7200] hover:underline"
+                                    >
+                                      [Ubah]
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+                              <span className="text-[11px] font-semibold text-slate-400">
+                                {product.pack}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Card Action Footer */}
+                        <div className="p-4 sm:p-5 pt-0">
+                          <button
+                            type="button"
+                            disabled={isUpdating}
+                            onClick={() => handleToggleStock(product.id, isAvailable)}
+                            className={`w-full flex items-center justify-center gap-2 rounded-2xl py-2.5 px-4 text-xs font-bold transition shadow-xs disabled:opacity-50 ${
+                              isAvailable
+                                ? "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
+                                : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-500/20"
+                            }`}
+                          >
+                            {isUpdating ? (
+                              <>
+                                <Flaticon name="spinner" className="text-xs animate-spin" />
+                                <span>Menyimpan ke Katalog...</span>
+                              </>
+                            ) : isAvailable ? (
+                              <>
+                                <Flaticon name="cross-circle" className="text-xs" />
+                                <span>Tandai Habis (Sold Out)</span>
+                              </>
+                            ) : (
+                              <>
+                                <Flaticon name="check-circle" className="text-xs" />
+                                <span>Aktifkan Kembali ke Katalog</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             )}
           </div>

@@ -8,20 +8,10 @@ import { Flaticon } from "@/components/ui/Flaticon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-const products = [
-  { id:"carica-biasa", name:"Carica Biasa", group:"Carica", pack:"6 cup × 115 g", price:22000, description:"Potongan pepaya gunung Dieng yang lembut dengan sirup manis segar. Nikmat disajikan dingin.", image:"https://ayopromo.com/show-picture?path=gambar%2Fproduk%2FcCVpzIO5LdcBNAiT9hNdNhWOmOhJh9dsMmMcDi3V.jpg", source:"https://ayopromo.com/produk/carica-delicia-isi-6-kemasan-plastik", note:"Harga pembanding listing publik." },
-  { id:"carica-premium", name:"Carica Premium", group:"Carica", pack:"6 cup besar", price:40000, description:"Pilihan kemasan cup besar untuk berbagi; buah carica dalam sirup khas dataran tinggi Dieng.", image:"https://down-id.img.susercontent.com/file/id-11134207-7ra0k-mc7nllxauxj618", source:"https://shopee.co.id/Carica-Sumbing-Segar-Kemasan-Plastik-isi-6-Cup-Khas-Dieng-Wonosobo-Ekonomis-i.168398720.44458581587", note:"Contoh harga listing, merek dan ukuran berbeda." },
-  { id:"carica-kardus", name:"Carica Kardus", group:"Carica", pack:"1 box · 6 cup", price:22000, description:"Paket carica dalam kotak oleh-oleh berisi enam cup praktis untuk dibawa pulang.", image:"https://down-id.img.susercontent.com/file/id-11134207-7qukz-ljjkt9mggwtmdf", source:"https://shopee.co.id/Carica-khas-Wonosobo-kemasan-dus-isi-6cup-100-gula-asli-i.883597447.18591135523", note:"Harga pembanding kemasan isi enam." },
-  { id:"mie-ongklok", name:"Mie Ongklok Instan", group:"Makanan", pack:"6 bungkus", price:78000, description:"Versi praktis kuliner Wonosobo dengan mie, sayuran kering, dan kuah kental berbumbu.", image:"https://yuasafood.com/an-component/media/upload-gambar-artikel/WhatsApp_Image_2022-12-13_at_09_33_10.jpeg", source:"https://yuasafood.com/artikel/48-mie-ongklok-instan", note:"Estimasi dari harga satuan listing." },
-  { id:"pitos-gurih", name:"Pitos Gurih", group:"Camilan", pack:"6 bungkus", price:90000, description:"Camilan tempe renyah dengan rasa gurih ringan, cocok untuk teman perjalanan.", image:"https://ayopromo.com/show-picture?path=gambar%2Fproduk%2FrEnedYU9YTufLmEcqkQA8MxBz7sdDvCKwukrPagV.jpg", source:"https://ayopromo.com/produk/petos-2", note:"Estimasi harga enam bungkus dari listing Petos." },
-  { id:"keripik-carica", name:"Keripik Carica", group:"Camilan", pack:"6 bungkus", price:90000, description:"Irisan carica yang diolah menjadi camilan renyah dengan rasa buah khas Dieng.", image:"https://jadesta.kemenpar.go.id/imgpost/138959.jpg", source:"https://jadesta.kemenpar.go.id/paket/keripik_carica", note:"Estimasi dari harga mulai yang dipublikasikan." },
-  { id:"keripik-combro", name:"Keripik Combro", group:"Camilan", pack:"6 bungkus", price:78000, description:"Camilan kering berbahan singkong dengan isian dan bumbu gurih khas combro.", image:"https://down-id.img.susercontent.com/file/id-11134207-7qukz-ljss03pvr4fe68", source:"https://shopee.co.id/Keripik-Combro-Kering-Comring-300-gram-Oleh-Oleh-Khas-Wonosobo-Jajan-Nusantara-dari-Singkong-i.275141487.20829669819", note:"Estimasi paket dari harga listing produk sejenis." },
-  { id:"keripik-jamur", name:"Keripik Jamur", group:"Camilan", pack:"6 bungkus", price:150000, description:"Jamur tiram berbalut tepung berbumbu, digoreng hingga renyah.", image:"https://raja-wisata.com/wp-content/uploads/2024/09/Keripik-Jamur-Dieng.jpg", source:"https://raja-wisata.com/ragam-oleh-oleh-khas-dieng-yang-bisa-dipilih-saat-berwisata-ke-dieng/", note:"Estimasi tengah dari kisaran publik." },
-  { id:"purwaceng", name:"Purwaceng", group:"Minuman", pack:"6 kemasan", price:240000, description:"Minuman herbal dari tanaman khas Dieng, tersedia dalam bentuk bubuk, teh, atau kopi sesuai produk.", image:"https://parboaboa.com/_next/image?url=%2Fimage%2Fmain%2Fpurwaceng-dieng.webp&w=1200&q=75", source:"https://parboaboa.com/oleh-oleh-khas-dieng", note:"Estimasi tengah dari kisaran harga kemasan publik." },
-];
+import { INITIAL_KARIKA_PRODUCTS, KarikaProduct } from "@/lib/karika-products-data";
 
 const rupiah = (n: number) => `Rp${n.toLocaleString("id-ID")}`;
-type Product = typeof products[number];
+type Product = KarikaProduct;
 
 interface ActiveOrderState {
   orderId: string;
@@ -44,6 +34,7 @@ const deliveryStatusText: Record<string, { label: string; color: string }> = {
 };
 
 export default function CatalogPage() {
+  const [products, setProducts] = useState<Product[]>(INITIAL_KARIKA_PRODUCTS);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Semua");
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -52,6 +43,24 @@ export default function CatalogPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [payment, setPayment] = useState<"qris" | "cod">("qris");
+
+  // Load latest live products & stock from admin API
+  useEffect(() => {
+    const fetchLiveProducts = async () => {
+      try {
+        const res = await fetch("/api/products", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.products) && data.products.length > 0) {
+            setProducts(data.products);
+          }
+        }
+      } catch (err) {
+        console.warn("Using offline fallback products:", err);
+      }
+    };
+    void fetchLiveProducts();
+  }, []);
   
   // Tracking feature state
   const [activeOrder, setActiveOrder] = useState<ActiveOrderState | null>(null);
@@ -403,9 +412,15 @@ export default function CatalogPage() {
                   <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold text-slate-800 shadow-xs">
                     Foto referensi
                   </span>
-                  <span className="absolute bottom-3 right-3 rounded-full bg-[#292a23]/90 px-3 py-1 text-xs font-bold text-white">
-                    Paket isi 6
-                  </span>
+                  {p.is_available === false ? (
+                    <span className="absolute top-3 right-3 rounded-full bg-rose-600 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-white shadow-xs">
+                      Stok Habis
+                    </span>
+                  ) : (
+                    <span className="absolute bottom-3 right-3 rounded-full bg-[#292a23]/90 px-3 py-1 text-xs font-bold text-white">
+                      Paket isi 6
+                    </span>
+                  )}
                 </div>
                 <div className="px-5 pt-4">
                   <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#958329]">
@@ -428,26 +443,38 @@ export default function CatalogPage() {
                 </div>
               </button>
 
-              <div className="flex items-center justify-between border-t border-[#efeee9] px-5 py-3 bg-[#faf9f5]">
-                <span className="text-xs font-semibold text-[#75746d]">Tambah ke pesanan</span>
-                <div className="flex items-center gap-3">
-                  <button
-                    aria-label={`Kurangi ${p.name}`}
-                    onClick={() => change(p.id, -1)}
-                    className="grid h-8 w-8 place-items-center rounded-full border border-[#e4e1d7] bg-white hover:bg-[#f8f7f2] transition"
-                  >
-                    <Flaticon name="minus" className="text-xs" />
-                  </button>
-                  <span className="w-5 text-center text-sm font-bold">{cart[p.id] || 0}</span>
-                  <button
-                    aria-label={`Tambah ${p.name}`}
-                    onClick={() => change(p.id, 1)}
-                    className="grid h-8 w-8 place-items-center rounded-full bg-[#f4ce00] hover:bg-[#dfba00] transition shadow-xs"
-                  >
-                    <Flaticon name="plus" className="text-xs" />
-                  </button>
+              {p.is_available === false ? (
+                <div className="flex items-center justify-between border-t border-rose-100 px-5 py-3.5 bg-rose-50/70">
+                  <span className="text-xs font-bold text-rose-700 flex items-center gap-1.5">
+                    <Flaticon name="cross-circle" className="text-xs text-rose-600" />
+                    Stok Sedang Kosong
+                  </span>
+                  <span className="text-[10px] uppercase font-bold text-rose-500 bg-white px-2 py-0.5 rounded border border-rose-200">
+                    Restock Segera
+                  </span>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-center justify-between border-t border-[#efeee9] px-5 py-3 bg-[#faf9f5]">
+                  <span className="text-xs font-semibold text-[#75746d]">Tambah ke pesanan</span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      aria-label={`Kurangi ${p.name}`}
+                      onClick={() => change(p.id, -1)}
+                      className="grid h-8 w-8 place-items-center rounded-full border border-[#e4e1d7] bg-white hover:bg-[#f8f7f2] transition"
+                    >
+                      <Flaticon name="minus" className="text-xs" />
+                    </button>
+                    <span className="w-5 text-center text-sm font-bold">{cart[p.id] || 0}</span>
+                    <button
+                      aria-label={`Tambah ${p.name}`}
+                      onClick={() => change(p.id, 1)}
+                      className="grid h-8 w-8 place-items-center rounded-full bg-[#f4ce00] hover:bg-[#dfba00] transition shadow-xs"
+                    >
+                      <Flaticon name="plus" className="text-xs" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </article>
           ))}
         </div>
@@ -509,15 +536,24 @@ export default function CatalogPage() {
                   <p className="text-[11px] text-[#77766f]">Harga per paket</p>
                   <p className="text-2xl font-black text-[#24251f]">{rupiah(selected.price)}</p>
                 </div>
-                <Button
-                  onClick={() => {
-                    change(selected.id, 1);
-                    setSelected(null);
-                  }}
-                  className="rounded-xl bg-[#292a23] hover:bg-black text-white font-bold px-5"
-                >
-                  + Tambah Keranjang
-                </Button>
+                {selected.is_available === false ? (
+                  <Button
+                    disabled
+                    className="rounded-xl bg-slate-200 text-slate-500 font-bold px-5 cursor-not-allowed"
+                  >
+                    Stok Sedang Habis
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      change(selected.id, 1);
+                      setSelected(null);
+                    }}
+                    className="rounded-xl bg-[#292a23] hover:bg-black text-white font-bold px-5"
+                  >
+                    + Tambah Keranjang
+                  </Button>
+                )}
               </div>
             </div>
           </section>

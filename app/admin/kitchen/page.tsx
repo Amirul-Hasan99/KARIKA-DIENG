@@ -6,22 +6,7 @@ import { useKitchenOrders } from "@/hooks/useKitchenOrders";
 import { Order, OrderStatus } from "@/types";
 import { formatOrderTime, formatRupiah } from "@/lib/utils";
 import { printReceiptViaBrowser } from "@/lib/thermal-printer";
-import {
-  ChefHat,
-  Bell,
-  BellOff,
-  Printer,
-  CheckCircle2,
-  Clock,
-  ArrowRight,
-  Search,
-  Volume2,
-  Utensils,
-  AlertCircle,
-  Flame,
-  ArrowLeft,
-  Coffee,
-} from "lucide-react";
+import Flaticon from "@/components/ui/Flaticon";
 
 export default function KitchenDashboardPage() {
   const {
@@ -123,19 +108,19 @@ export default function KitchenDashboardPage() {
       case "received":
         return (
           <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800 border border-amber-300">
-            <AlertCircle className="h-3 w-3" strokeWidth={2} /> Pesanan Baru
+            <Flaticon name="exclamation" className="text-xs" /> Pesanan Baru
           </span>
         );
       case "cooking":
         return (
           <span className="inline-flex items-center gap-1 rounded-md bg-sky-100 px-2 py-0.5 text-[11px] font-bold text-sky-800 border border-sky-300">
-            <Coffee className="h-3 w-3" strokeWidth={2} /> Sedang Diseduh / Dimasak
+            <Flaticon name="mug-hot-alt" className="text-xs" /> Sedang Diseduh / Dimasak
           </span>
         );
       case "ready":
         return (
           <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 border border-emerald-300">
-            <CheckCircle2 className="h-3 w-3" strokeWidth={2} /> Siap Disajikan
+            <Flaticon name="check" className="text-xs font-bold" /> Siap Disajikan
           </span>
         );
       case "completed":
@@ -147,14 +132,14 @@ export default function KitchenDashboardPage() {
     }
   };
 
-  const getNextStatus = (current: OrderStatus): { next: OrderStatus; label: string; icon: any } | null => {
+  const getNextStatus = (current: OrderStatus): { next: OrderStatus; label: string; iconName: string } | null => {
     switch (current) {
       case "received":
-        return { next: "cooking", label: "1. Mulai Seduh & Masak", icon: Coffee };
+        return { next: "cooking", label: "1. Mulai Seduh & Masak", iconName: "mug-hot-alt" };
       case "cooking":
-        return { next: "ready", label: "2. Pesanan Jadi (Siap Diambil)", icon: CheckCircle2 };
+        return { next: "ready", label: "2. Pesanan Jadi (Siap Diambil)", iconName: "check" };
       case "ready":
-        return { next: "completed", label: "3. Selesaikan Pesanan", icon: ArrowRight };
+        return { next: "completed", label: "3. Selesaikan Pesanan", iconName: "arrow-right" };
       default:
         return null;
     }
@@ -171,11 +156,11 @@ export default function KitchenDashboardPage() {
               className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition"
               title="Kembali ke Beranda"
             >
-              <ArrowLeft className="h-4.5 w-4.5 sm:h-5 sm:w-5" strokeWidth={1.75} />
+              <Flaticon name="arrow-left" className="text-sm" />
             </Link>
 
             <div className="hidden xs:flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-sm shadow-amber-500/20">
-              <Coffee className="h-4.5 w-4.5 sm:h-5 sm:w-5" strokeWidth={2} />
+              <Flaticon name="mug-hot-alt" className="text-base text-white" />
             </div>
 
             <div className="min-w-0">
@@ -197,7 +182,7 @@ export default function KitchenDashboardPage() {
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {/* Search Box */}
             <div className="relative w-28 xs:w-36 sm:w-52">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" strokeWidth={1.75} />
+              <Flaticon name="search" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400" />
               <input
                 type="text"
                 value={searchTable}
@@ -213,7 +198,7 @@ export default function KitchenDashboardPage() {
               className="hidden sm:flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 active:scale-95 transition"
               title="Uji Notifikasi Suara"
             >
-              <Volume2 className="h-3.5 w-3.5 text-amber-600" strokeWidth={1.75} />
+              <Flaticon name="volume" className="text-xs text-amber-600" />
               <span>Tes Bel</span>
             </button>
 
@@ -227,9 +212,9 @@ export default function KitchenDashboardPage() {
               }`}
             >
               {soundEnabled ? (
-                <Bell className="h-3.5 w-3.5 text-emerald-600" strokeWidth={2} />
+                <Flaticon name="bell" className="text-xs text-emerald-600" />
               ) : (
-                <BellOff className="h-3.5 w-3.5" strokeWidth={2} />
+                <Flaticon name="bell-ring" className="text-xs text-slate-400 opacity-50" />
               )}
             </button>
           </div>
@@ -335,7 +320,7 @@ export default function KitchenDashboardPage() {
                     : "text-slate-600 hover:text-amber-700"
                 }`}
               >
-                <Coffee className="h-3 w-3" />
+                <Flaticon name="mug-hot-alt" className="text-xs" />
                 <span>Barista (Minuman)</span>
               </button>
               <button
@@ -347,7 +332,7 @@ export default function KitchenDashboardPage() {
                     : "text-slate-600 hover:text-orange-700"
                 }`}
               >
-                <Utensils className="h-3 w-3" />
+                <Flaticon name="restaurant" className="text-xs" />
                 <span>Dapur (Snack/Makanan)</span>
               </button>
             </div>
@@ -372,7 +357,7 @@ export default function KitchenDashboardPage() {
         ) : filteredOrders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-slate-200 text-slate-400 mb-3 shadow-xs">
-              <Utensils className="h-7 w-7" strokeWidth={1.75} />
+              <Flaticon name="restaurant" className="text-2xl" />
             </div>
             <h3 className="text-sm font-bold text-slate-800">Tidak Ada Tiket Pesanan</h3>
             <p className="text-xs text-slate-500 max-w-sm mt-1">
@@ -424,7 +409,7 @@ export default function KitchenDashboardPage() {
                       </div>
                       <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-500">
                         <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
+                          <Flaticon name="time-fast" className="text-xs" />
                           <span>{formatOrderTime(order.created_at)}</span>
                         </div>
                         <span className={`rounded px-1.5 py-0.2 text-[10px] border ${elapsedBadgeClass}`}>
@@ -519,7 +504,7 @@ export default function KitchenDashboardPage() {
                         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
                         title="Cetak Struk Thermal (ESC/POS)"
                       >
-                        <Printer className="h-4 w-4" strokeWidth={1.75} />
+                        <Flaticon name="print" className="text-sm" />
                       </button>
 
                       {/* Advance Order Status Button */}
@@ -534,7 +519,7 @@ export default function KitchenDashboardPage() {
                               : "bg-slate-700 hover:bg-slate-800"
                           }`}
                         >
-                          <nextAction.icon className="h-3.5 w-3.5" strokeWidth={2} />
+                          <Flaticon name={nextAction.iconName} className="text-xs" />
                           <span>{nextAction.label}</span>
                         </button>
                       )}

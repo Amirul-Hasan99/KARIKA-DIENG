@@ -9,25 +9,24 @@ export interface FlaticonProps extends React.HTMLAttributes<HTMLElement> {
   className?: string;
 }
 
-export function Flaticon({
-  name,
-  variant = "rr",
-  className,
-  ...props
-}: FlaticonProps) {
-  const prefix = variant === "brands" ? "fi-brands" : `fi-${variant}`;
-  return (
-    <i
-      className={cn(
-        "fi inline-flex items-center justify-center leading-none select-none text-[1.15em]",
-        `${prefix}-${name}`,
-        className
-      )}
-      aria-hidden="true"
-      {...props}
-    />
-  );
-}
+export const Flaticon = React.forwardRef<HTMLElement, FlaticonProps>(
+  ({ name, variant = "rr", className, ...props }, ref) => {
+    const prefix = variant === "brands" ? "fi-brands" : `fi-${variant}`;
+    return (
+      <i
+        ref={ref}
+        className={cn(
+          "fi inline-flex items-center justify-center leading-none select-none text-[1.15em]",
+          `${prefix}-${name}`,
+          className
+        )}
+        aria-hidden="true"
+        {...props}
+      />
+    );
+  }
+);
+Flaticon.displayName = "Flaticon";
 
 export default Flaticon;
 

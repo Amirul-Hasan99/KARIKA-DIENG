@@ -5,16 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/useCartStore";
 import { formatRupiah } from "@/lib/utils";
 import QrisDisplay from "./QrisDisplay";
-import {
-  Loader2,
-  AlertTriangle,
-  CheckCircle2,
-  X,
-  Sparkles,
-  ShieldCheck,
-  Smartphone,
-  ExternalLink,
-} from "lucide-react";
+import Flaticon from "@/components/ui/Flaticon";
 
 declare global {
   interface Window {
@@ -242,7 +233,7 @@ export default function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
           onClick={onClose}
           className="absolute right-4 top-4 z-10 rounded-full bg-slate-100 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition"
         >
-          <X className="h-4 w-4" strokeWidth={2} />
+          <Flaticon name="cross" className="text-xs" />
         </button>
 
         {/* Method Selector Tabs */}
@@ -260,7 +251,7 @@ export default function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <Smartphone className="h-4 w-4" />
+              <Flaticon name="smartphone" className="text-sm" />
               <span>QRIS / E-Wallet</span>
             </button>
             <button
@@ -281,7 +272,7 @@ export default function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
         {errorMsg && (
           <div className="py-6 space-y-3">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 border border-rose-200 text-rose-500">
-              <AlertTriangle className="h-6 w-6" strokeWidth={1.75} />
+              <Flaticon name="exclamation" className="text-xl" />
             </div>
             <h3 className="text-sm font-bold text-slate-900">Kendala Pembayaran</h3>
             <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">{errorMsg}</p>
@@ -312,12 +303,12 @@ export default function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
             >
               {isCashSubmitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Flaticon name="spinner" className="text-sm animate-spin" />
                   <span>Mengirim Pesanan ke Kasir...</span>
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="h-4 w-4" strokeWidth={2.5} />
+                  <Flaticon name="check" className="text-sm font-bold" />
                   <span>Kirim Pesanan &amp; Bayar di Kasir</span>
                 </>
               )}
@@ -331,7 +322,7 @@ export default function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
             {isLoading && !orderData && (
               <div className="py-16 space-y-4">
                 <div className="relative mx-auto w-14 h-14 flex items-center justify-center rounded-2xl bg-amber-50 border border-amber-200">
-                  <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+                  <Flaticon name="spinner" className="text-2xl animate-spin text-amber-500" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-900">
@@ -348,7 +339,7 @@ export default function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
               <div className="space-y-4 pt-1">
                 <div className="text-center">
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-[11px] font-bold text-amber-800">
-                    <Sparkles className="h-3 w-3 text-amber-600" />
+                    <Flaticon name="sparkles" className="text-xs text-amber-600" />
                     <span>Simulasi Pembayaran Midtrans QRIS</span>
                   </span>
                   <h3 className="text-base font-black text-slate-900 mt-2">
@@ -371,7 +362,7 @@ export default function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
                 {/* Simulation Banner Notice */}
                 <div className="rounded-2xl border border-amber-200/80 bg-amber-50/70 p-3 text-left">
                   <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
-                    <Smartphone className="h-4 w-4 text-amber-600" />
+                    <Flaticon name="smartphone" className="text-sm text-amber-600" />
                     <span>Mode Simulasi (Development)</span>
                   </div>
                   <p className="text-[11px] text-amber-800/90 mt-1 leading-relaxed">
@@ -389,12 +380,12 @@ export default function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
                   >
                     {isProcessingPayment ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Flaticon name="spinner" className="text-sm animate-spin" />
                         <span>Memverifikasi QRIS &amp; Mengirim ke Dapur...</span>
                       </>
                     ) : (
                       <>
-                        <CheckCircle2 className="h-4 w-4" strokeWidth={2.5} />
+                        <Flaticon name="check" className="text-sm font-bold" />
                         <span>Simulasikan Scan &amp; Bayar QRIS Sukses</span>
                       </>
                     )}

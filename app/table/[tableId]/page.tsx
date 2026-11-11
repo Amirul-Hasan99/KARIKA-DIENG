@@ -11,28 +11,7 @@ import ModifierDrawer from "@/components/customer/ModifierDrawer";
 import CartDrawer from "@/components/customer/CartDrawer";
 import PaymentModal from "@/components/customer/PaymentModal";
 import CheckOrderModal from "@/components/customer/CheckOrderModal";
-import {
-  Search,
-  ShoppingBag,
-  Plus,
-  Minus,
-  Trash2,
-  ArrowRight,
-  ArrowLeft,
-  UtensilsCrossed,
-  Sparkles,
-  Utensils,
-  Package,
-  Coffee,
-  PlusCircle,
-  Tag,
-  ChevronRight,
-  SlidersHorizontal,
-  Cookie,
-  Flame,
-  Receipt,
-  Clock,
-} from "lucide-react";
+import Flaticon from "@/components/ui/Flaticon";
 
 function MenuImage({
   src,
@@ -172,17 +151,17 @@ export default function TableOrderPage() {
   const renderCategoryIcon = (catId: string) => {
     switch (catId) {
       case "cat-coffee":
-        return <Coffee className="h-4 w-4" strokeWidth={1.75} />;
+        return <Flaticon name="mug-hot-alt" className="text-sm" />;
       case "cat-manual":
-        return <Sparkles className="h-4 w-4" strokeWidth={1.75} />;
+        return <Flaticon name="sparkles" className="text-sm" />;
       case "cat-non-coffee":
-        return <Flame className="h-4 w-4" strokeWidth={1.75} />;
+        return <Flaticon name="flame" className="text-sm" />;
       case "cat-savory-snack":
-        return <Utensils className="h-4 w-4" strokeWidth={1.75} />;
+        return <Flaticon name="restaurant" className="text-sm" />;
       case "cat-sweet-snack":
-        return <Cookie className="h-4 w-4" strokeWidth={1.75} />;
+        return <Flaticon name="cookie" className="text-sm" />;
       default:
-        return <Coffee className="h-4 w-4" strokeWidth={1.75} />;
+        return <Flaticon name="mug-hot-alt" className="text-sm" />;
     }
   };
 
@@ -208,11 +187,11 @@ export default function TableOrderPage() {
               className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-2xs hover:border-amber-300 active:scale-95 transition"
               title="Kembali ke Pemilihan Meja"
             >
-              <ArrowLeft className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-slate-700" strokeWidth={2.2} />
+              <Flaticon name="arrow-left" className="text-sm text-slate-700" />
             </Link>
 
             <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-sm shadow-amber-500/20">
-              <Coffee className="h-4.5 w-4.5 sm:h-5 sm:w-5" strokeWidth={2} />
+              <Flaticon name="mug-hot-alt" className="text-base text-white" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
@@ -233,7 +212,7 @@ export default function TableOrderPage() {
               className="relative flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-2.5 py-1.5 sm:px-3 text-xs font-bold text-slate-700 shadow-2xs transition"
               title="Cek & Pantau Pesanan Anda"
             >
-              <Receipt className="h-3.5 w-3.5 text-amber-500" />
+              <Flaticon name="receipt" className="text-xs text-amber-500" />
               <span className="hidden sm:inline">Cek Pesanan</span>
               <span className="sm:hidden">Status</span>
               {lastActiveOrderId && (
@@ -280,7 +259,7 @@ export default function TableOrderPage() {
                     {lastActiveOrderId ? "Pantau Status" : "Meja Anda"}
                   </span>
                   {lastActiveOrderId && (
-                    <ArrowRight className="h-3 w-3 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
+                    <Flaticon name="arrow-right" className="text-xs text-amber-600 group-hover:translate-x-0.5 transition-transform" />
                   )}
                 </div>
                 <span className="text-xs sm:text-sm font-black text-slate-900 leading-none block">
@@ -312,7 +291,7 @@ export default function TableOrderPage() {
                 className="flex items-center gap-1.5 rounded-lg bg-white text-slate-900 font-bold px-3 py-1 text-xs shadow-xs hover:bg-amber-50 active:scale-95 transition shrink-0"
               >
                 <span>Pantau Pesanan</span>
-                <ArrowRight className="h-3 w-3 text-amber-600" />
+                <Flaticon name="arrow-right" className="text-xs text-amber-600" />
               </Link>
             </div>
           </div>
@@ -323,7 +302,7 @@ export default function TableOrderPage() {
           <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             {/* Search Input */}
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" strokeWidth={1.75} />
+              <Flaticon name="search" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
@@ -343,7 +322,7 @@ export default function TableOrderPage() {
                     : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
-                <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} />
+                <Flaticon name="sparkles" className="text-xs" />
                 <span>Semua Menu</span>
               </button>
 
@@ -400,7 +379,7 @@ export default function TableOrderPage() {
             ) : filteredMenus.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white py-16 text-center">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 mb-3">
-                  <UtensilsCrossed className="h-6 w-6" strokeWidth={1.75} />
+                  <Flaticon name="restaurant" className="text-2xl" />
                 </div>
                 <h3 className="text-sm font-bold text-slate-800">Menu tidak ditemukan</h3>
                 <p className="text-xs text-slate-500 mt-1 max-w-xs">
@@ -476,7 +455,7 @@ export default function TableOrderPage() {
                               }}
                               className="flex h-8 items-center gap-1 rounded-xl bg-amber-50 border border-amber-200/70 px-3 text-xs font-bold text-amber-700 hover:bg-amber-500 hover:text-white hover:border-amber-500 active:scale-95 transition-all shadow-xs"
                             >
-                              <Plus className="h-3.5 w-3.5" strokeWidth={2} />
+                              <Flaticon name="plus" className="text-xs" />
                               <span>Pilih</span>
                             </button>
                           ) : (
@@ -499,7 +478,7 @@ export default function TableOrderPage() {
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-                    <ShoppingBag className="h-4 w-4" strokeWidth={1.75} />
+                    <Flaticon name="shopping-bag" className="text-sm" />
                   </div>
                   <h3 className="text-base font-bold text-slate-900">Ringkasan Pesanan</h3>
                 </div>
@@ -512,7 +491,7 @@ export default function TableOrderPage() {
               {items.length === 0 ? (
                 <div className="py-12 text-center">
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-2">
-                    <ShoppingBag className="h-5 w-5" strokeWidth={1.75} />
+                    <Flaticon name="shopping-bag" className="text-lg" />
                   </div>
                   <p className="text-xs font-semibold text-slate-700">Keranjang masih kosong</p>
                   <p className="text-[11px] text-slate-400 mt-0.5">
@@ -546,7 +525,7 @@ export default function TableOrderPage() {
                             onClick={() => updateQty(cartItem.id, cartItem.qty - 1)}
                             className="flex h-5 w-5 items-center justify-center rounded text-slate-500 hover:bg-white hover:text-slate-900 transition"
                           >
-                            <Minus className="h-3 w-3" />
+                            <Flaticon name="minus" className="text-[10px]" />
                           </button>
                           <span className="w-5 text-center font-bold text-slate-800">
                             {cartItem.qty}
@@ -555,7 +534,7 @@ export default function TableOrderPage() {
                             onClick={() => updateQty(cartItem.id, cartItem.qty + 1)}
                             className="flex h-5 w-5 items-center justify-center rounded text-slate-500 hover:bg-white hover:text-slate-900 transition"
                           >
-                            <Plus className="h-3 w-3" />
+                            <Flaticon name="plus" className="text-[10px]" />
                           </button>
                         </div>
                       </div>
@@ -600,7 +579,7 @@ export default function TableOrderPage() {
                     className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-2.5 text-xs font-bold text-white shadow-sm shadow-amber-500/30 hover:brightness-105 active:scale-98 transition"
                   >
                     <span>Lanjut ke Pembayaran</span>
-                    <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                    <Flaticon name="arrow-right" className="text-xs" />
                   </button>
                 </div>
               )}
@@ -615,7 +594,7 @@ export default function TableOrderPage() {
           <div className="mx-auto flex max-w-md items-center justify-between rounded-2xl bg-white border border-amber-300/80 p-3 text-slate-900 shadow-xl shadow-amber-500/10">
             <div className="flex items-center gap-3">
               <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm">
-                <ShoppingBag className="h-5 w-5" strokeWidth={1.75} />
+                <Flaticon name="shopping-bag" className="text-base" />
                 <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white">
                   {totalItems}
                 </span>
@@ -635,7 +614,7 @@ export default function TableOrderPage() {
               className="flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 px-4 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-all"
             >
               <span>Lihat Pesanan</span>
-              <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+              <Flaticon name="arrow-right" className="text-xs" />
             </button>
           </div>
         </div>
@@ -665,7 +644,7 @@ export default function TableOrderPage() {
 
             <div className="flex items-center gap-1 rounded-xl bg-amber-500 hover:bg-amber-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs shrink-0">
               <span>Pantau</span>
-              <ArrowRight className="h-3.5 w-3.5" />
+              <Flaticon name="arrow-right" className="text-xs" />
             </div>
           </Link>
         </div>

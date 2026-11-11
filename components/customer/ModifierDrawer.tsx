@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { MenuItem, ModifierOption, ModifierGroup, SelectedModifier } from "@/types";
 import { formatRupiah } from "@/lib/utils";
-import { X, Plus, Minus, AlertCircle, Check } from "lucide-react";
+import Flaticon from "@/components/ui/Flaticon";
 
 interface ModifierDrawerProps {
   menu: MenuItem | null;
@@ -151,7 +151,7 @@ export default function ModifierDrawer({
               className="rounded-full bg-slate-100 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition"
               aria-label="Tutup"
             >
-              <X className="h-4 w-4" strokeWidth={2} />
+              <Flaticon name="cross" className="text-xs" />
             </button>
           </div>
         </div>
@@ -160,7 +160,7 @@ export default function ModifierDrawer({
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
           {validationError && (
             <div className="flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 font-medium">
-              <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
+              <Flaticon name="exclamation" className="text-sm shrink-0 text-rose-500" />
               <span>{validationError}</span>
             </div>
           )}
@@ -214,7 +214,7 @@ export default function ModifierDrawer({
                                 : "border-slate-300 bg-white"
                             }`}
                           >
-                            {isSelected && <Check className="h-2.5 w-2.5 stroke-[3]" />}
+                            {isSelected && <Flaticon name="check" className="text-[10px]" />}
                           </div>
                           <span className="text-xs sm:text-sm font-medium">{opt.name}</span>
                         </div>
@@ -261,7 +261,7 @@ export default function ModifierDrawer({
                 disabled={qty <= 1}
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent transition"
               >
-                <Minus className="h-3.5 w-3.5" />
+                <Flaticon name="minus" className="text-[10px]" />
               </button>
               <span className="w-8 text-center text-xs font-bold text-slate-900">{qty}</span>
               <button
@@ -269,7 +269,7 @@ export default function ModifierDrawer({
                 onClick={() => setQty((prev) => prev + 1)}
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-white transition"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Flaticon name="plus" className="text-[10px]" />
               </button>
             </div>
 
