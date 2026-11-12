@@ -159,7 +159,7 @@ function OrdersContent() {
             </span>
             <div className="flex flex-col">
               <span className="text-lg font-black tracking-tight text-[#24251f]">
-                KARIKA<span className="text-[#90802a] ml-1">DIENG</span>
+                Dioleh - oleh <span className="text-[#90802a] ml-1">Dieng</span>
               </span>
               <span className="text-[10px] text-[#78776f] font-medium leading-none">
                 Laman Pantau Pesanan

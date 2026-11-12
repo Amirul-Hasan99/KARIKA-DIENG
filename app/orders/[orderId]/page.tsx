@@ -241,11 +241,11 @@ export default function OrderTrackingPage() {
               <span>Cari dengan No. WA</span>
             </Link>
             <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#292a23] text-[#f4ce00] shadow-xs" title="Karika Dieng">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#292a23] text-[#f4ce00] shadow-xs" title="Dioleh - oleh Dieng">
                 <BrandLogoIcon size={14} color="#f4ce00" />
               </span>
               <span className="text-xs font-black tracking-tight text-[#24251f] hidden sm:inline">
-                KARIKA<span className="text-[#90802a] ml-0.5">DIENG</span>
+                Dioleh - oleh <span className="text-[#90802a] ml-0.5">Dieng</span>
               </span>
             </div>
           </div>
@@ -260,7 +260,7 @@ export default function OrderTrackingPage() {
           <div className="mt-8 rounded-3xl border border-[#e8e5dc] bg-white p-10 text-center">
             <Flaticon name="clock" variant="rr" className="mx-auto text-3xl animate-pulse text-[#d1b000]" />
             <p className="mt-3 font-semibold text-lg">Memuat status pesanan…</p>
-            <p className="text-xs text-[#77766f] mt-1">Menghubungkan ke sistem Karika Dieng</p>
+            <p className="text-xs text-[#77766f] mt-1">Menghubungkan ke sistem Dioleh - oleh Dieng</p>
           </div>
         ) : (
           <div className="mt-6 space-y-6">

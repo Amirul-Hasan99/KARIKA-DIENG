@@ -54,7 +54,7 @@ export default function AdminLoginForm() {
             </div>
             <div>
               <CardTitle className="text-2xl font-bold tracking-tight">
-                Masuk Admin Karika Dieng
+                Masuk Admin Dioleh - oleh Dieng
               </CardTitle>
               <CardDescription className="mt-2 leading-6">
                 Area operasional pengantaran dan pesanan oleh-oleh Dieng.
@@ -129,7 +129,7 @@ export default function AdminLoginForm() {
           </CardContent>
         </Card>
         <p className="mt-6 text-center text-xs text-[#858585]">
-          Dioleh2 Karika Dieng · Panel Terproteksi
+          Dioleh - oleh Dieng · Panel Terproteksi
         </p>
       </div>
     </main>

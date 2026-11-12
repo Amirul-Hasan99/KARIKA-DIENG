@@ -11,7 +11,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Karika Dieng — Oleh-Oleh Wonosobo & Manisan Carica Asli",
+  title: "Dioleh - oleh Dieng — Oleh-Oleh Wonosobo & Manisan Carica Asli",
   description: "Pesan oleh-oleh khas Dieng dan Wonosobo: Carica Delicia, Mie Ongklok, Keripik Jamur, dan Purwaceng. Pengantaran hingga radius 8 km dari Titik 0 Dieng.",
   icons: {
     icon: "/logo.svg",

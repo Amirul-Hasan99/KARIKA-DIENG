@@ -93,7 +93,7 @@ export default function AdminLayout({
             <BrandLogoIcon size={24} color="#f4ce00" />
           </span>
           <p className="text-sm font-semibold text-slate-700">
-            Memverifikasi keamanan sesi admin Karika Dieng...
+            Memverifikasi keamanan sesi admin Dioleh - oleh Dieng...
           </p>
         </div>
       </div>

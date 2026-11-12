@@ -425,15 +425,15 @@ export default function AdminDashboardPage() {
             <Link
               href="/"
               className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#292a23] to-[#454639] text-[#f4ce00] shadow-md shadow-black/10 hover:opacity-95 transition"
-              title="Karika Dieng — Beranda"
+              title="Dioleh - oleh Dieng — Beranda"
             >
               <BrandLogoIcon size={24} color="#f4ce00" />
             </Link>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <h1 className="text-sm sm:text-lg font-black tracking-tight text-[#24251f] truncate">
-                  <span className="sm:hidden">Admin Karika</span>
-                  <span className="hidden sm:inline">KARIKA DIENG • ADMIN OPERASIONAL</span>
+                  <span className="sm:hidden">Dioleh - oleh Dieng</span>
+                  <span className="hidden sm:inline">DIOLEH - OLEH DIENG • ADMIN OPERASIONAL</span>
                 </h1>
                 <span className="hidden sm:inline-flex rounded-full bg-[#f4ce00]/20 px-2.5 py-0.5 text-[10px] font-black text-[#857200] border border-[#f4ce00]/40 shrink-0">
                   DIENG WONOSOBO
@@ -1122,7 +1122,7 @@ export default function AdminDashboardPage() {
                       <Flaticon name="box-alt" className="text-sm" />
                     </div>
                     <h3 className="text-base font-extrabold text-[#24251f]">
-                      Manajemen Produk &amp; Stok Katalog Karika Dieng
+                      Manajemen Produk &amp; Stok Katalog Dioleh - oleh Dieng
                     </h3>
                   </div>
                   <p className="text-xs text-[#727168] mt-1 max-w-2xl">
@@ -1167,7 +1167,7 @@ export default function AdminDashboardPage() {
             {isStockLoading ? (
               <div className="py-16 text-center text-xs text-slate-400">
                 <Flaticon name="spinner" className="text-2xl animate-spin text-[#90802a] mx-auto mb-2" />
-                <p>Memuat katalog produk Karika Dieng...</p>
+                <p>Memuat katalog produk Dioleh - oleh Dieng...</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -31,7 +31,7 @@ export function formatReceiptText(order: Order, options?: PrintOptions): string 
   const lines: string[] = [];
 
   // Header
-  lines.push(center(options?.storeName || "KARIKA DIENG"));
+  lines.push(center(options?.storeName || "DIOLEH - OLEH DIENG"));
   lines.push(center(options?.storeAddress || "Sentra Oleh-Oleh Wonosobo & Dieng"));
   lines.push(center("Titik 0 Km Dieng · WA: 083122046357"));
   lines.push(doubleDivider);

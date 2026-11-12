@@ -268,16 +268,8 @@ export default function CatalogPage() {
                 <BrandLogoIcon size={16} color="#f4ce00" />
               </span>
               <span className="text-xl font-black tracking-tight text-[#24251f]">
-                KARIKA<span className="text-[#90802a] ml-1">DIENG</span>
+                Dioleh - oleh <span className="text-[#90802a]">Dieng</span>
               </span>
-            </Link>
-            <Link
-              href="/admin/login"
-              aria-label="Login admin"
-              title="Portal Admin"
-              className="grid h-8 w-8 place-items-center rounded-full border border-[#e3e0d5] bg-white text-[#77756f] hover:text-black transition"
-            >
-              <Flaticon name="lock" className="text-xs" />
             </Link>
           </div>
 

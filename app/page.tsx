@@ -16,8 +16,7 @@ import {
 import { Flaticon } from "@/components/ui/Flaticon";
 import { BrandLogoIcon } from "@/components/ui/BrandLogo";
 
-const heroImage =
-  "https://raw.githubusercontent.com/anomalyco/assets/main/dieng-welcome-sign.jpg";
+const heroImage = "/images/hero-dieng.jpg";
 
 const featuredProducts = [
   {
@@ -46,8 +45,7 @@ const featuredProducts = [
     pack: "Isi 6 Bungkus",
     price: 78000,
     tag: "Kuliner Legendaris",
-    image:
-      "https://yuasafood.com/an-component/media/upload-gambar-artikel/WhatsApp_Image_2022-12-13_at_09_33_10.jpeg",
+    image: "/images/mie-ongklok.jpg",
     desc: "Kuah kental gurih berempah khas Wonosobo lengkap dengan ebi, tahu, dan kucai kering.",
   },
   {
@@ -137,39 +135,21 @@ export default function HomePage() {
   };
   return (
     <div className="min-h-screen bg-[#f8f7f2] text-[#24251f] selection:bg-[#f4ce00] selection:text-black">
-      {/* Top Banner Alert */}
-      <aside aria-label="Informasi layanan" className="bg-[#292a23] text-white py-2 px-4 text-xs">
-        <div className="mx-auto max-w-7xl flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-medium">
-              Layanan Antar Aktif · Radius 8 km dari Titik 0 Km Dieng
-            </span>
-          </div>
-          <div className="flex items-center gap-4 text-[#c4c2b9]">
-            <span className="hidden sm:inline">Minimal 5 Paket (Bebas Campur)</span>
-            <Link
-              href="/admin/login"
-              className="inline-flex items-center gap-1 hover:text-white transition"
-            >
-              <Flaticon name="lock" variant="rr" className="text-xs mr-0.5" />
-              <span>Portal Admin</span>
-            </Link>
-          </div>
-        </div>
-      </aside>
-
       {/* Main Header / Navigation */}
       <header className="sticky top-0 z-30 border-b border-[#e7e4d8] bg-[#f8f7f2]/90 backdrop-blur-md">
         <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-10">
           <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-2.5">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#292a23] text-[#f4ce00] shadow-sm">
+            <Link
+              href="/admin/login"
+              className="flex items-center gap-2.5 group"
+              title="Dioleh - oleh Dieng"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#292a23] text-[#f4ce00] shadow-sm transition group-hover:bg-black">
                 <BrandLogoIcon size={20} color="#f4ce00" />
               </span>
               <div className="flex flex-col">
                 <span className="text-2xl font-black tracking-tight text-[#24251f]">
-                  KARIKA<span className="text-[#90802a] ml-1">DIENG</span>
+                  Dioleh - oleh <span className="text-[#90802a]">Dieng</span>
                 </span>
                 <span className="text-[10px] font-semibold text-[#7d7a6e] -mt-1 hidden sm:inline">
                   Sentra Oleh-Oleh Khas Dataran Tinggi
@@ -297,18 +277,9 @@ export default function HomePage() {
           <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
             {/* Left Column: Headlines & Call to actions */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#e5e2d6] bg-white px-4 py-1.5 shadow-xs">
-                <Badge variant="secondary" className="bg-[#fcf3c7] text-[#92400e] hover:bg-[#fcf3c7] font-bold">
-                  2.093 mdpl
-                </Badge>
-                <span className="text-xs font-semibold text-[#666359]">
-                  Asli dari Perkebunan Dataran Tinggi Dieng
-                </span>
-              </div>
-
               <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl text-[#1e1f1a] leading-[1.08]">
                 Dingin udaranya,{" "}
-                <span className="text-[#a48600] underline decoration-[#f4ce00]/40 decoration-wavy">
+                <span className="text-[#a48600]">
                   hangat &amp; manis
                 </span>{" "}
                 oleh-olehnya.
@@ -398,10 +369,6 @@ export default function HomePage() {
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-black/40 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-md">
                       <Flaticon name="compass" variant="rr" className="text-xs text-[#f4ce00]" />
                       Titik 0 Km Dieng
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[#f4ce00] px-2.5 py-1 text-xs font-black text-black">
-                      <Flaticon name="star" variant="sr" className="text-xs text-black" />
-                      4.9 / 5.0
                     </span>
                   </div>
 
@@ -869,7 +836,7 @@ export default function HomePage() {
                   <BrandLogoIcon size={18} color="#f4ce00" />
                 </span>
                 <span className="text-2xl font-black tracking-tight text-[#24251f]">
-                  KARIKA<span className="text-[#90802a] ml-1">DIENG</span>
+                  Dioleh - oleh <span className="text-[#90802a]">Dieng</span>
                 </span>
               </Link>
               <p className="text-sm text-[#66645a] leading-relaxed max-w-sm">
@@ -962,11 +929,6 @@ export default function HomePage() {
                     WhatsApp CS (0878-3943-9540)
                   </a>
                 </li>
-                <li>
-                  <Link href="/admin/login" className="hover:text-black transition text-xs font-semibold">
-                    Portal Petugas &amp; Admin
-                  </Link>
-                </li>
               </ul>
             </div>
 
@@ -1004,19 +966,10 @@ export default function HomePage() {
           {/* Bottom Copyright and Security Bar */}
           <div className="mt-12 pt-8 border-t border-[#e2decfa0] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#7e7b70]">
             <p>
-              &copy; {new Date().getFullYear()} dioleh2 DIENG · Karika &amp; Oleh-Oleh Wonosobo. Seluruh hak cipta dilindungi.
+              &copy; {new Date().getFullYear()} Dioleh - oleh Dieng · Sentra Oleh-Oleh Wonosobo. Seluruh hak cipta dilindungi.
             </p>
             <div className="flex items-center gap-4">
               <span>Dataran Tinggi Dieng, Jawa Tengah</span>
-              <span>•</span>
-              <Link
-                href="/admin/login"
-                className="inline-flex items-center gap-1.5 font-semibold text-[#525046] hover:text-black"
-                title="Login Admin"
-              >
-                <Flaticon name="lock" variant="rr" className="text-xs" />
-                <span>Admin Login</span>
-              </Link>
             </div>
           </div>
         </div>
