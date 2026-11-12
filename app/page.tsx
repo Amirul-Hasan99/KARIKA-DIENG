@@ -158,45 +158,45 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="hidden lg:flex items-center gap-4 text-sm font-semibold text-[#5c5a52]">
-            <Link href="/catalog" className="hover:text-black transition">
+          <div className="hidden lg:flex items-center gap-3 text-xs xl:text-sm font-semibold text-[#5c5a52]">
+            <Link href="/catalog" className="hover:text-black transition px-1 py-0.5">
               Katalog Lengkap
             </Link>
-            <a href="#alur-pemesanan" className="hover:text-black transition">
+            <a href="#alur-pemesanan" className="hover:text-black transition px-1 py-0.5">
               Alur Pemesanan
             </a>
-            <a href="#keunggulan" className="hover:text-black transition">
+            <a href="#keunggulan" className="hover:text-black transition px-1 py-0.5">
               Keunggulan
             </a>
-            <a href="#pilihan-favorit" className="hover:text-black transition">
+            <a href="#pilihan-favorit" className="hover:text-black transition px-1 py-0.5">
               Produk Favorit
             </a>
             <a
               href="https://www.google.com/maps/search/?api=1&query=Titik+0+Dieng"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-black transition"
+              className="inline-flex items-center gap-1 hover:text-black transition px-1 py-0.5"
             >
-              <Flaticon name="marker" variant="sr" className="text-sm text-[#a28b00]" />
+              <Flaticon name="marker" variant="sr" className="text-xs text-[#a28b00]" />
               Area Antar 8 km
             </a>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <Link href={activeOrder ? `/orders/${activeOrder.orderId}` : "/orders"}>
               <Button
                 variant="outline"
                 size="default"
-                className={`relative rounded-full border font-bold text-xs h-8 sm:h-10 px-2.5 sm:px-4 gap-1 sm:gap-1.5 shadow-2xs transition shrink-0 ${
+                className={`relative rounded-full border font-bold text-xs h-8 sm:h-9 px-2.5 sm:px-3.5 gap-1 sm:gap-1.5 shadow-2xs transition shrink-0 ${
                   activeOrder
                     ? "border-amber-300 bg-amber-100/90 text-amber-900 shadow-xs"
                     : "border-[#d8d5c7] bg-white text-[#24251f] hover:bg-[#faf9f5]"
                 }`}
               >
-                <Flaticon name="truck-side" className="text-xs sm:text-sm text-[#90802a]" />
+                <Flaticon name="truck-side" className="text-xs text-[#90802a]" />
                 <span className="hidden xs:inline">Pantau</span> Pesanan
                 {activeOrder && (
-                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-ping ml-0.5 sm:ml-1" />
+                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-ping ml-0.5" />
                 )}
               </Button>
             </Link>
@@ -204,9 +204,9 @@ export default function HomePage() {
               <Button
                 variant="secondary"
                 size="default"
-                className="rounded-full shadow-xs hover:shadow-md transition gap-1.5 font-bold h-8 sm:h-10 px-3 sm:px-5 bg-[#f4ce00] hover:bg-[#dfba00] text-[#24251f] text-xs sm:text-sm shrink-0"
+                className="rounded-full shadow-xs hover:shadow-md transition gap-1.5 font-bold h-8 sm:h-9 px-3 sm:px-4 bg-[#f4ce00] hover:bg-[#dfba00] text-[#24251f] text-xs shrink-0"
               >
-                <Flaticon name="shopping-bag" variant="sr" className="text-sm sm:text-base" />
+                <Flaticon name="shopping-bag" variant="sr" className="text-xs sm:text-sm" />
                 <span className="hidden sm:inline">Beli Oleh-Oleh</span>
                 <span className="sm:hidden">Beli</span>
               </Button>
@@ -360,6 +360,7 @@ export default function HomePage() {
                     alt="Tugu Titik 0 Dieng Wonosobo"
                     fill
                     priority
+                    unoptimized
                     sizes="(max-width: 1024px) 100vw, 40vw"
                     className="object-cover transition duration-700 hover:scale-105"
                   />

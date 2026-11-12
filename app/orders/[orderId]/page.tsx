@@ -32,6 +32,38 @@ export default function OrderTrackingPage() {
   const [timeLeft, setTimeLeft] = useState<number>(15 * 60);
   const [isSimulating, setIsSimulating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [paymentProof, setPaymentProof] = useState<string | null>(null);
+
+  // Load saved payment proof from localStorage
+  useEffect(() => {
+    if (!orderId) return;
+    try {
+      const savedProof = localStorage.getItem(`karika_proof_${orderId}`);
+      if (savedProof) {
+        setPaymentProof(savedProof);
+      }
+    } catch {}
+  }, [orderId]);
+
+  const handleFileProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Silakan pilih file gambar (JPG, PNG, atau WEBP)");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      setPaymentProof(result);
+      try {
+        localStorage.setItem(`karika_proof_${orderId}`, result);
+      } catch {}
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Poll order data
   useEffect(() => {
@@ -219,39 +251,50 @@ export default function OrderTrackingPage() {
     ? (() => {
         const adminPhone = "6283122046357";
         const isSettled = order.payment_status === "settlement";
-        const paymentLabel = order.payment_type === "cod"
-          ? "COD (Bayar Tunai saat Kurir Tiba)"
-          : isSettled
-          ? "QRIS (SUDAH DIBAYAR / LUNAS)"
-          : "QRIS (Menunggu Verifikasi Toko)";
+        const paymentLabel =
+          order.payment_type === "cod"
+            ? "COD (Bayar Tunai saat Kurir Tiba)"
+            : isSettled
+            ? "QRIS (SUDAH DIBAYAR / LUNAS)"
+            : "QRIS (Menunggu Verifikasi Toko)";
 
         const itemsList = order.items
-          .map((i) => `• ${i.name} (${i.qty} paket) - Rp${i.subtotal.toLocaleString("id-ID")}`)
+          .map(
+            (i) =>
+              `- ${i.name} (${i.qty} paket) - Rp${i.subtotal.toLocaleString(
+                "id-ID"
+              )}`
+          )
           .join("\n");
 
         const mapsLink = order.coordinates
           ? `https://www.google.com/maps/search/?api=1&query=${order.coordinates.lat},${order.coordinates.lng}`
           : "Sesuai titik penginapan Dieng";
 
+        const proofText = paymentProof
+          ? "- Bukti Transfer: SUDAH SAYA LAMPIRKAN DI BAWAH (Foto Struk Terlampir)"
+          : "- Bukti Transfer: Siap saya kirimkan ke chat ini";
+
         const msg = `Halo Admin Dioleh - oleh Dieng, saya ingin konfirmasi pesanan saya:
 
-📦 *DATA PESANAN:*
-• No. Order: #${order.order_number}
-• Nama: ${order.customer_name || "Pelanggan"}
-• No. WhatsApp: ${order.customer_phone || "-"}
-• Total Belanja: Rp${order.total_amount.toLocaleString("id-ID")}
-• Metode Bayar: ${paymentLabel}
-• Status Pembayaran: ${isSettled ? "✅ LUNAS (TERVERIFIKASI)" : "⏳ BELUM LUNAS / COD"}
+*DATA PESANAN:*
+- No. Order: #${order.order_number}
+- Nama: ${order.customer_name || "Pelanggan"}
+- No. WhatsApp: ${order.customer_phone || "-"}
+- Total Belanja: Rp${order.total_amount.toLocaleString("id-ID")}
+- Metode Bayar: ${paymentLabel}
+- Status Pembayaran: ${isSettled ? "LUNAS (TERVERIFIKASI)" : "BELUM LUNAS / COD"}
+${proofText}
 
-📍 *ALAMAT & TITIK PENGANTARAN:*
-• Patokan/Alamat: ${order.delivery_address || "-"}
-• Titik Google Maps: ${mapsLink}
-• Radius Jarak: ~${order.delivery_distance_km ?? 8} km dari Titik 0 Dieng
+*ALAMAT & TITIK PENGANTARAN:*
+- Patokan/Alamat: ${order.delivery_address || "-"}
+- Titik Google Maps: ${mapsLink}
+- Radius Jarak: ~${order.delivery_distance_km ?? 8} km dari Titik 0 Dieng
 
-📋 *RINCIAN PAKET OLEH-OLEH:*
+*RINCIAN PAKET OLEH-OLEH:*
 ${itemsList}
 
-Mohon segera di-ACC dan diproses kurir pengantarannya ya Admin. Terima kasih banyak! 🙏`;
+Mohon segera di-ACC dan diproses kurir pengantarannya ya Admin. Terima kasih banyak!`;
 
         return `https://wa.me/${adminPhone}?text=${encodeURIComponent(msg)}`;
       })()
@@ -612,7 +655,7 @@ Mohon segera di-ACC dan diproses kurir pengantarannya ya Admin. Terima kasih ban
                     </div>
 
                     {/* Simulation & Instant Confirmation Button */}
-                    <div className="mt-5 space-y-2">
+                    <div className="mt-5 space-y-3">
                       <button
                         onClick={handleSimulatePayment}
                         disabled={isSimulating}
@@ -630,9 +673,67 @@ Mohon segera di-ACC dan diproses kurir pengantarannya ya Admin. Terima kasih ban
                           </>
                         )}
                       </button>
-                      <p className="text-[11px] text-slate-500">
-                        Klik tombol di atas untuk menyimulasikan konfirmasi pelunasan QRIS langsung ke sistem toko &amp; kurir.
-                      </p>
+
+                      {/* Area Upload Bukti Transfer QRIS */}
+                      <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50/70 p-4 text-left space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                            <Flaticon name="picture" className="text-xs text-amber-700" />
+                            <span>Unggah Foto Bukti Transfer / Struk QRIS:</span>
+                          </span>
+                          {paymentProof && (
+                            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
+                              ✓ Bukti Tersimpan
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-[11px] text-amber-900/80 leading-relaxed">
+                          Pilih screenshot m-banking atau foto bukti transfer Anda agar otomatis terlampir saat konfirmasi ke WhatsApp admin.
+                        </p>
+
+                        <div className="flex items-center gap-2">
+                          <label className="flex-1 cursor-pointer flex items-center justify-center gap-1.5 rounded-xl border border-amber-300 bg-white hover:bg-amber-100/50 py-2 px-3 text-xs font-bold text-amber-950 transition shadow-2xs">
+                            <Flaticon name="camera" className="text-xs text-amber-700" />
+                            <span>{paymentProof ? "Ganti Foto Bukti" : "Ambil Foto / Pilih Struk"}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleFileProofChange}
+                              className="hidden"
+                            />
+                          </label>
+
+                          {paymentProof && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPaymentProof(null);
+                                try {
+                                  localStorage.removeItem(`karika_proof_${orderId}`);
+                                } catch {}
+                              }}
+                              className="rounded-xl border border-rose-200 bg-white p-2 text-rose-600 hover:bg-rose-50 text-xs font-bold"
+                              title="Hapus Bukti"
+                            >
+                              Hapus
+                            </button>
+                          )}
+                        </div>
+
+                        {paymentProof && (
+                          <div className="mt-2 relative rounded-xl overflow-hidden border border-amber-200 bg-white p-2">
+                            <img
+                              src={paymentProof}
+                              alt="Bukti Transfer QRIS"
+                              className="w-full max-h-48 object-contain rounded-lg"
+                            />
+                            <p className="mt-1 text-[10px] text-center text-slate-500 font-medium">
+                              Foto bukti transfer siap dikirimkan ke WhatsApp admin toko.
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -711,17 +812,15 @@ Mohon segera di-ACC dan diproses kurir pengantarannya ya Admin. Terima kasih ban
                         <span className="mx-2">•</span>
                         WhatsApp: <strong className="text-[#24251f] font-bold">{order.customer_phone}</strong>
                       </div>
-                      {order.customer_phone && (
-                        <a
-                          href={`https://wa.me/${order.customer_phone.replace(/\D/g, "").replace(/^0/, "62")}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 font-bold text-emerald-700 hover:underline"
-                        >
-                          <Flaticon name="phone-call" variant="sr" className="text-xs text-emerald-600" />
-                          <span>Hubungi via WhatsApp</span>
-                        </a>
-                      )}
+                      <a
+                        href={wa}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-xl transition shadow-2xs"
+                      >
+                        <Flaticon name="phone-call" variant="sr" className="text-xs text-emerald-600" />
+                        <span>Hubungi Admin via WhatsApp</span>
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -768,7 +867,11 @@ Mohon segera di-ACC dan diproses kurir pengantarannya ya Admin. Terima kasih ban
                     className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#168a54] px-5 py-4 text-sm font-bold text-white hover:bg-[#137446] transition shadow-md shadow-emerald-700/20"
                   >
                     <Flaticon name="whatsapp" variant="brands" className="text-base" />
-                    <span>Konfirmasi Pembayaran ke Admin WhatsApp (0831-2204-6357)</span>
+                    <span>
+                      {paymentProof
+                        ? "Konfirmasi Pembayaran & Kirim Bukti ke Admin WhatsApp (0831-2204-6357)"
+                        : "Konfirmasi Pembayaran ke Admin WhatsApp (0831-2204-6357)"}
+                    </span>
                   </a>
                   <p className="mt-2 text-center text-xs text-[#85857c]">
                     Admin toko akan langsung mengecek kesiapan paket dan mengabari kurir pengantar.

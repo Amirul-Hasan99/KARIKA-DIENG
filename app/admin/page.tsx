@@ -64,10 +64,25 @@ export default function AdminDashboardPage() {
   } = useKitchenOrders();
 
   const [activeTab, setActiveTab] = useState<"kds" | "transactions" | "stock">("kds");
-  const [kdsFilter, setKdsFilter] = useState<"all" | "received" | "cooking" | "ready" | "completed">("all");
+  const [kdsFilter, setKdsFilter] = useState<"all" | "received" | "cooking" | "ready" | "completed" | "cancelled">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOrderDetail, setSelectedOrderDetail] = useState<Order | null>(null);
   const [selectedCouriers, setSelectedCouriers] = useState<Record<string, string>>({});
+  const [transactionStatusFilter, setTransactionStatusFilter] = useState<"all" | "settlement" | "failed">("all");
+
+  // Product modal & CRUD form state
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<KarikaProduct | null>(null);
+  const [productForm, setProductForm] = useState({
+    name: "",
+    group: "Carica" as "Carica" | "Makanan" | "Camilan" | "Minuman",
+    pack: "",
+    price: 0,
+    stock_qty: 50,
+    description: "",
+    image: "",
+    is_available: true,
+  });
 
   type DateFilterType =
     | "all"
@@ -217,33 +232,33 @@ export default function AdminDashboardPage() {
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.delivery_address || "Dieng Wonosobo")}`;
 
     const itemsText = order.items
-      .map((item) => `• ${item.name} (${item.qty} paket)`)
+      .map((item) => `- ${item.name} (${item.qty} paket)`)
       .join("\n");
 
-    const message = `🛵 *TUGAS PENGANTARAN OLEH-OLEH - DIOLEH-OLEH DIENG*
+    const message = `*TUGAS PENGANTARAN OLEH-OLEH - DIOLEH - OLEH DIENG*
 Halo Mas/Mbak ${courier.name}, ada tugas pengantaran pesanan baru:
 
-📋 *DETAIL ORDER:*
-• No. Order: #${order.order_number}
-• Pemesan: ${order.customer_name || "Pelanggan"} (${order.customer_phone || "-"})
-• Total Belanja: ${formatRupiah(order.total_amount)}
-• Status Bayar: ${
+*DETAIL PESANAN:*
+- No. Order: #${order.order_number}
+- Pemesan: ${order.customer_name || "Pelanggan"} (${order.customer_phone || "-"})
+- Total Belanja: ${formatRupiah(order.total_amount)}
+- Status Bayar: ${
       order.payment_status === "settlement"
-        ? "✅ SUDAH LUNAS (QRIS) - JANGAN TAGIH KE PEMBELI"
-        : `⚠️ COD / BAYAR DI TEMPAT: ${formatRupiah(order.total_amount)}`
+        ? "SUDAH LUNAS (QRIS) - JANGAN TAGIH KE PEMBELI"
+        : `COD / BAYAR DI TEMPAT: ${formatRupiah(order.total_amount)}`
     }
 
-📍 *RUTE & ALAMAT PENGANTARAN:*
-• Titik Asal: Sentra Dioleh - oleh Dieng (Titik 0 Km)
-• Patokan Alamat: ${order.delivery_address || "Kawasan Dataran Tinggi Dieng"}
-• Estimasi Jarak: ~${order.delivery_distance_km ?? 8} km
-• 🧭 *Link Rute Google Maps:*
+*RUTE & ALAMAT PENGANTARAN:*
+- Titik Asal: Sentra Dioleh - oleh Dieng (Titik 0 Km)
+- Patokan Alamat: ${order.delivery_address || "Kawasan Dataran Tinggi Dieng"}
+- Estimasi Jarak: ~${order.delivery_distance_km ?? 8} km
+- Link Rute Google Maps:
 ${gmapsUrl}
 
-📦 *RINCIAN PAKET OLEH-OLEH:*
+*RINCIAN PAKET OLEH-OLEH:*
 ${itemsText}
 
-Mohon kurir segera ambil paket di sentra Dioleh - oleh Dieng dan meluncur ke lokasi pembeli. Hubungi pembeli jika sudah dekat lokasi. Terima kasih! 🙏`;
+Mohon kurir segera ambil paket di sentra Dioleh - oleh Dieng dan meluncur ke lokasi pembeli. Hubungi pembeli jika sudah dekat lokasi. Terima kasih!`;
 
     const cleanPhone = courier.phone.replace(/\D/g, "").replace(/^0/, "62");
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
@@ -259,10 +274,10 @@ Mohon kurir segera ambil paket di sentra Dioleh - oleh Dieng dan meluncur ke lok
       : `https://dioleh-oleh-dieng.vercel.app/orders/${order.id}`;
 
     const itemsText = order.items
-      .map((item) => `• ${item.name}\n  ${item.qty} paket × ${formatRupiah(item.price)} = ${formatRupiah(item.subtotal)}`)
+      .map((item) => `- ${item.name}\n  ${item.qty} paket x ${formatRupiah(item.price)} = ${formatRupiah(item.subtotal)}`)
       .join("\n");
 
-    const message = `🧾 *STRUK PEMBAYARAN RESMI - DIOLEH - OLEH DIENG*
+    const message = `*STRUK PEMBAYARAN RESMI - DIOLEH - OLEH DIENG*
 Sentra Oleh-Oleh Khas Dataran Tinggi Dieng & Wonosobo
 Titik 0 Km Dieng · Telp/WA Toko: 0831-2204-6357
 ================================
@@ -270,7 +285,7 @@ No. Pesanan : #${order.order_number}
 Waktu Pesan : ${formatOrderTime(order.created_at)}
 Pelanggan   : ${order.customer_name || "Pelanggan"}
 WhatsApp    : ${order.customer_phone || "-"}
-Status      : ✅ SUDAH DI-ACC ADMIN (LUNAS)
+Status      : LUNAS (TERVERIFIKASI ADMIN)
 Metode      : ${order.payment_type ? order.payment_type.toUpperCase() : "QRIS"}
 ================================
 RINCIAN BELANJA:
@@ -278,30 +293,167 @@ ${itemsText}
 ================================
 TOTAL PEMBAYARAN : ${formatRupiah(order.total_amount)}
 ================================
-📍 *ALAMAT TUJUAN PENGANTARAN:*
+*ALAMAT TUJUAN PENGANTARAN:*
 ${order.delivery_address || "Kawasan Dataran Tinggi Dieng"}
-${order.coordinates ? `🧭 Koordinat: ${order.coordinates.lat.toFixed(5)}, ${order.coordinates.lng.toFixed(5)}` : ""}
+${order.coordinates ? `Koordinat: ${order.coordinates.lat.toFixed(5)}, ${order.coordinates.lng.toFixed(5)}` : ""}
 
-🛵 *STATUS PENGIRIMAN:*
-Pesanan Anda telah kami terima & di-ACC dengan baik. Kurir sedang menyiapkan paket oleh-oleh segar Anda dan segera meluncur ke lokasi!
+*STATUS PENGIRIMAN:*
+Pesanan Anda telah kami terima & di-ACC dengan baik. Kurir sedang menyiapkan paket oleh-oleh hangat Anda dan segera meluncur ke lokasi!
 
-🔗 *PANTAU LIVE STATUS PENGANTARAN:*
+*PANTAU LIVE STATUS PENGANTARAN:*
 ${trackingUrl}
 
-Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati liburan di Dieng. 🙏✨`;
+Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati liburan di Dieng.`;
 
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+  };
+
+  // Generate WhatsApp Acceptance & Thank You Chat to Buyer
+  const getBuyerAcceptedWhatsAppUrl = (order: Order) => {
+    const cleanPhone = (order.customer_phone || "").replace(/\D/g, "").replace(/^0/, "62");
+    if (!cleanPhone) return "#";
+
+    const trackingUrl = typeof window !== "undefined"
+      ? `${window.location.origin}/orders/${order.id}`
+      : `https://dioleh-oleh-dieng.vercel.app/orders/${order.id}`;
+
+    const message = `Halo Kak ${order.customer_name || "Pelanggan"}, terima kasih banyak telah memesan di *Dioleh - oleh Dieng*! 🙏
+
+Kabar baik, pembayaran untuk pesanan *#${order.order_number}* telah kami terima & di-ACC dengan baik. ✅
+
+Paket oleh-oleh pilihan Anda saat ini sedang dikemas rapi dan higienis. Kurir kami segera meluncur mengantarkan pesanan langsung ke penginapan/villa Anda di sekitar Dieng. 🛵📦
+
+Pantau live status perjalanan kurir di link berikut:
+${trackingUrl}
+
+Jika ada petunjuk arah atau patokan tambahan, silakan balas pesan ini ya Kak. Selamat menikmati liburan di Dataran Tinggi Dieng! 🌄`;
+
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+  };
+
+  // Restore Cancelled Order
+  const handleRestoreOrder = async (orderId: string) => {
+    if (!confirm("Pulihkan pesanan ini kembali ke antrean aktif?")) return;
+    try {
+      await updateOrderStatus(orderId, "received");
+      alert("Pesanan berhasil dipulihkan ke antrean pesanan baru.");
+    } catch (e) {
+      console.error("Restore order error:", e);
+      alert("Gagal memulihkan pesanan.");
+    }
+  };
+
+  // Product CRUD Form Handlers
+  const handleOpenAddProduct = () => {
+    setEditingProduct(null);
+    setProductForm({
+      name: "",
+      group: "Carica",
+      pack: "1 paket",
+      price: 25000,
+      stock_qty: 50,
+      description: "",
+      image: "/images/hero-dieng.jpg",
+      is_available: true,
+    });
+    setIsAddProductOpen(true);
+  };
+
+  const handleOpenEditProduct = (prod: KarikaProduct) => {
+    setEditingProduct(prod);
+    setProductForm({
+      name: prod.name,
+      group: prod.group,
+      pack: prod.pack,
+      price: prod.price,
+      stock_qty: prod.stock_qty || 50,
+      description: prod.description,
+      image: prod.image,
+      is_available: prod.is_available !== false,
+    });
+    setIsAddProductOpen(true);
+  };
+
+  const handleSubmitProductForm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!productForm.name || Number(productForm.price) <= 0) {
+      alert("Nama produk dan harga wajib diisi dengan benar.");
+      return;
+    }
+
+    try {
+      if (editingProduct) {
+        // Edit existing product
+        const res = await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingProduct.id,
+            ...productForm,
+          }),
+        });
+        if (res.ok) {
+          await loadCatalogStock();
+          setIsAddProductOpen(false);
+          setEditingProduct(null);
+        } else {
+          alert("Gagal memperbarui produk.");
+        }
+      } else {
+        // Add new product
+        const res = await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "create",
+            ...productForm,
+          }),
+        });
+        if (res.ok) {
+          await loadCatalogStock();
+          setIsAddProductOpen(false);
+        } else {
+          alert("Gagal menambahkan produk baru.");
+        }
+      }
+    } catch (err) {
+      console.error("Save product error:", err);
+      alert("Terjadi kesalahan saat menyimpan produk.");
+    }
+  };
+
+  const handleDeleteProduct = async (id: string, name: string) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus produk "${name}" dari katalog?`)) return;
+    try {
+      const res = await fetch(`/api/products?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+      } else {
+        alert("Gagal menghapus produk.");
+      }
+    } catch (err) {
+      console.error("Delete product error:", err);
+    }
   };
 
   // Filtered orders for Antrean Pesanan Oleh-Oleh
   const kdsOrders = useMemo(() => {
     return orders.filter((order) => {
-      // Show all active orders that are not failed / cancelled
-      if (order.payment_status === "failed") return false;
+      // If filtering for cancelled, only show cancelled
+      if (kdsFilter === "cancelled") {
+        if (order.payment_status !== "failed") return false;
+      } else {
+        // Otherwise hide cancelled orders from normal flow
+        if (order.payment_status === "failed") return false;
+      }
 
       const matchTab =
         kdsFilter === "all"
           ? order.order_status !== "completed"
+          : kdsFilter === "cancelled"
+          ? true
           : order.order_status === kdsFilter;
 
       const q = searchQuery.trim().toLowerCase();
@@ -336,16 +488,17 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
     }
   };
 
-  // All settled transactions for summary and history with date filter
-  const settledOrders = useMemo(() => {
+  // Filtered transactions for report table, Excel & PDF export
+  const filteredTransactions = useMemo(() => {
     return orders.filter((o) => {
-      if (o.payment_status !== "settlement") return false;
+      // Filter status transaksi
+      if (transactionStatusFilter === "settlement" && o.payment_status !== "settlement") return false;
+      if (transactionStatusFilter === "failed" && o.payment_status !== "failed") return false;
 
       if (dateFilter === "all") return true;
 
       const orderDate = new Date(o.created_at);
       if (isNaN(orderDate.getTime())) return false;
-
       const today = new Date();
 
       if (dateFilter === "today") {
@@ -368,7 +521,7 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
 
       if (dateFilter === "this_week") {
         const startOfWeek = new Date(today);
-        const day = today.getDay(); // 0 is Sunday, 1 is Monday
+        const day = today.getDay();
         const diff = (day === 0 ? -6 : 1) - day;
         startOfWeek.setDate(today.getDate() + diff);
         startOfWeek.setHours(0, 0, 0, 0);
@@ -398,7 +551,11 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
 
       return true;
     });
-  }, [orders, dateFilter, customStartDate, customEndDate]);
+  }, [orders, dateFilter, customStartDate, customEndDate, transactionStatusFilter]);
+
+  const settledOrders = useMemo(() => {
+    return filteredTransactions.filter((o) => o.payment_status === "settlement");
+  }, [filteredTransactions]);
 
   const totalOmzet = useMemo(() => {
     return settledOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
@@ -412,6 +569,7 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
       cooking: validOrders.filter((o) => o.order_status === "cooking").length,
       ready: validOrders.filter((o) => o.order_status === "ready").length,
       completed: validOrders.filter((o) => o.order_status === "completed").length,
+      cancelled: orders.filter((o) => o.payment_status === "failed").length,
     };
   }, [orders]);
 
@@ -463,57 +621,193 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
     }
   };
 
-  // CSV Export
-  const handleExportCSV = () => {
+  // Ekspor Laporan Excel (.csv dengan BOM UTF-8)
+  const handleExportExcel = () => {
     const headers = [
-      "No. Order",
-      "Tujuan Pengantaran",
-      "Titik Maps",
-      "Pelanggan / Kontak",
-      "Waktu Pemesanan",
-      "Status Bayar",
+      "No. Pesanan",
+      "Waktu Transaksi",
+      "Nama Pelanggan",
+      "Nomor WhatsApp",
+      "Alamat Pengantaran",
+      "Titik Maps GPS",
       "Metode Pembayaran",
-      "Total (IDR)",
-      "Rincian Paket Oleh-Oleh",
+      "Status Pembayaran",
+      "Total Belanja (Rp)",
+      "Rincian Item Oleh-Oleh",
     ];
 
-    const rows = settledOrders.map((o) => {
+    const rows = filteredTransactions.map((o) => {
       const itemsStr = o.items
-        .map((i) => `${i.qty}x ${i.name}`)
+        .map((i) => `${i.qty}x ${i.name} (Rp${i.price})`)
         .join("; ")
         .replace(/"/g, '""');
       const mapsCoords = o.coordinates ? `${o.coordinates.lat},${o.coordinates.lng}` : "-";
       return [
         `"${o.order_number}"`,
-        `"${(o.delivery_address || `Pengantaran Radius ${o.delivery_distance_km || 8} km`).replace(/"/g, '""')}"`,
-        `"${mapsCoords}"`,
-        `"${(o.customer_name || "Pelanggan").replace(/"/g, '""')} (${o.customer_phone || "-"})"`,
         `"${new Date(o.created_at).toLocaleString("id-ID")}"`,
-        `"${o.payment_status}"`,
-        `"${o.payment_type || "digital"}"`,
+        `"${(o.customer_name || "Pelanggan").replace(/"/g, '""')}"`,
+        `"${(o.customer_phone || "-").replace(/"/g, '""')}"`,
+        `"${(o.delivery_address || `Radius ${o.delivery_distance_km || 8} km`).replace(/"/g, '""')}"`,
+        `"${mapsCoords}"`,
+        `"${o.payment_type ? o.payment_type.toUpperCase() : "QRIS"}"`,
+        `"${o.payment_status === "settlement" ? "Lunas" : o.payment_status === "failed" ? "Dibatalkan" : "Menunggu Bayar"}"`,
         o.total_amount,
         `"${itemsStr}"`,
       ];
     });
 
     const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+      "\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\r\n");
 
-    const encodedUri = encodeURI(csvContent);
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.href = url;
     const filterSuffix =
       dateFilter === "custom"
         ? `${customStartDate}_sd_${customEndDate}`
         : dateFilter;
-    link.setAttribute(
-      "download",
-      `Laporan_Penjualan_${filterSuffix}_${new Date().toISOString().split("T")[0]}.csv`
-    );
+    link.download = `Laporan_Penjualan_Dioleh_Oleh_Dieng_${filterSuffix}_${new Date().toISOString().split("T")[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Ekspor Laporan PDF Resmi Berbahasa Indonesia dengan Header & Footer Toko
+  const handleExportPDF = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      alert("Izinkan pop-up peramban Anda untuk mencetak / menyimpan PDF.");
+      return;
+    }
+
+    const itemsHtml = filteredTransactions
+      .map(
+        (o, idx) => `
+        <tr>
+          <td style="padding: 7px; border: 1px solid #cbd5e1; text-align: center;">${idx + 1}</td>
+          <td style="padding: 7px; border: 1px solid #cbd5e1; font-family: monospace; font-weight: bold;">${o.order_number}</td>
+          <td style="padding: 7px; border: 1px solid #cbd5e1;">${new Date(o.created_at).toLocaleString("id-ID")}</td>
+          <td style="padding: 7px; border: 1px solid #cbd5e1;">
+            <strong>${o.customer_name || "Pelanggan"}</strong><br/>
+            <span style="font-size: 11px; color: #475569;">${o.customer_phone || "-"}</span>
+          </td>
+          <td style="padding: 7px; border: 1px solid #cbd5e1; font-size: 11px;">
+            ${o.delivery_address || "Kawasan Dataran Tinggi Dieng"}
+          </td>
+          <td style="padding: 7px; border: 1px solid #cbd5e1; font-size: 11px;">
+            ${o.items.map((i) => `${i.qty}x ${i.name}`).join("<br/>")}
+          </td>
+          <td style="padding: 7px; border: 1px solid #cbd5e1; text-transform: uppercase; font-size: 11px;">
+            ${o.payment_type || "QRIS"}
+          </td>
+          <td style="padding: 7px; border: 1px solid #cbd5e1; text-align: center; font-size: 11px;">
+            <span style="padding: 2px 6px; border-radius: 4px; font-weight: bold; background: ${
+              o.payment_status === "settlement"
+                ? "#dcfce7; color: #166534"
+                : o.payment_status === "failed"
+                ? "#fee2e2; color: #991b1b"
+                : "#fef3c7; color: #92400e"
+            }">
+              ${o.payment_status === "settlement" ? "LUNAS" : o.payment_status === "failed" ? "DIBATALKAN" : "PENDING"}
+            </span>
+          </td>
+          <td style="padding: 7px; border: 1px solid #cbd5e1; text-align: right; font-weight: bold;">
+            ${formatRupiah(o.total_amount)}
+          </td>
+        </tr>
+      `
+      )
+      .join("");
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="id">
+      <head>
+        <meta charset="utf-8"/>
+        <title>Laporan Penjualan - Dioleh - oleh Dieng</title>
+        <style>
+          @page { size: A4 landscape; margin: 12mm; }
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; margin: 0; padding: 15px; font-size: 12px; }
+          .header { border-bottom: 3px double #f4ce00; padding-bottom: 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-start; }
+          .title { font-size: 20px; font-weight: 900; color: #24251f; margin: 0; }
+          .subtitle { font-size: 12px; color: #64748b; margin: 2px 0 0 0; }
+          .report-info { text-align: right; font-size: 12px; }
+          .kpi-box { display: flex; gap: 15px; margin-bottom: 14px; }
+          .kpi-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; background: #f8fafc; flex: 1; }
+          .kpi-label { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold; }
+          .kpi-val { font-size: 16px; font-weight: bold; color: #0f172a; margin-top: 2px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11px; }
+          th { background: #292a23; color: #ffffff; padding: 9px 7px; font-size: 10px; text-transform: uppercase; text-align: left; border: 1px solid #334155; }
+          .footer { border-top: 1px solid #cbd5e1; padding-top: 10px; font-size: 10px; color: #64748b; display: flex; justify-content: space-between; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <h1 class="title">DIOLEH - OLEH DIENG</h1>
+            <p class="subtitle">Sentra Oleh-Oleh Khas Dataran Tinggi Dieng &amp; Kabupaten Wonosobo</p>
+            <p style="font-size: 11px; color: #475569; margin: 2px 0 0 0;">Titik 0 Km Dieng, Kejajar, Wonosobo, Jawa Tengah · WA Toko: 0831-2204-6357</p>
+          </div>
+          <div class="report-info">
+            <h2 style="font-size: 14px; margin: 0; font-weight: bold; color: #b45309;">LAPORAN REKAPITULASI PENJUALAN</h2>
+            <p style="margin: 3px 0 0 0;">Periode: <strong>${getDateFilterLabel()}</strong></p>
+            <p style="margin: 2px 0 0 0; font-size: 10px; color: #64748b;">Dicetak pada: ${new Date().toLocaleString("id-ID")}</p>
+          </div>
+        </div>
+
+        <div class="kpi-box">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Transaksi Sesuai Filter</div>
+            <div class="kpi-val">${filteredTransactions.length} Pesanan</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Transaksi Berhasil (Lunas)</div>
+            <div class="kpi-val" style="color: #15803d;">${settledOrders.length} Pesanan</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total Pendapatan Bersih (Omzet)</div>
+            <div class="kpi-val" style="color: #15803d;">${formatRupiah(totalOmzet)}</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 25px; text-align: center;">No</th>
+              <th>No. Order</th>
+              <th>Waktu</th>
+              <th>Pelanggan</th>
+              <th>Alamat Antar</th>
+              <th>Paket Oleh-Oleh</th>
+              <th>Metode</th>
+              <th style="text-align: center;">Status</th>
+              <th style="text-align: right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml || '<tr><td colspan="9" style="text-align:center; padding: 20px;">Tidak ada transaksi pada periode yang dipilih.</td></tr>'}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <span>Dioleh - oleh Dieng · Dokumen Laporan Rekapitulasi Kasir &amp; Penjualan Resmi</span>
+          <span>Dicetak otomatis oleh Sistem Manajemen Kasir Dioleh - oleh Dieng</span>
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
   };
 
   return (
@@ -745,6 +1039,7 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
                 { id: "cooking", label: "Sedang Dikemas", count: counts.cooking },
                 { id: "ready", label: "Siap Kirim Kurir", count: counts.ready },
                 { id: "completed", label: "Riwayat Terkirim", count: counts.completed },
+                { id: "cancelled", label: "Dibatalkan / Void", count: counts.cancelled },
               ].map((chip) => (
                 <button
                   key={chip.id}
@@ -927,120 +1222,179 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
 
                       {/* Card Footer */}
                       <div className="pt-3 border-t border-slate-100 space-y-2.5">
-                        {/* Selector 5 Kurir WhatsApp Dieng */}
-                        <div className="rounded-xl border border-sky-200 bg-sky-50/70 p-2.5 text-xs space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="font-bold text-sky-900 flex items-center gap-1">
-                              <span>🛵</span>
-                              <span>Pilih Kurir Dieng:</span>
-                            </span>
-                            <span className="text-[10px] font-bold text-sky-700 bg-white border border-sky-200 px-1.5 py-0.5 rounded">
-                              5 Nomor Siap Antar
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-1.5">
-                            <select
-                              value={selectedCouriers[order.id] || "k1"}
-                              onChange={(e) =>
-                                setSelectedCouriers({
-                                  ...selectedCouriers,
-                                  [order.id]: e.target.value,
-                                })
-                              }
-                              className="w-full text-[11px] font-semibold bg-white border border-sky-300 rounded-lg p-1.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500"
-                            >
-                              {DIENG_COURIERS.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                  {c.name} ({c.phone}) - {c.zone}
-                                </option>
-                              ))}
-                            </select>
-
-                            <a
-                              href={getAssignCourierWhatsAppUrl(
-                                order,
-                                DIENG_COURIERS.find(
-                                  (c) => c.id === (selectedCouriers[order.id] || "k1")
-                                ) || DIENG_COURIERS[0]
+                        {order.payment_status === "failed" ? (
+                          <div className="rounded-xl border border-rose-200 bg-rose-50/80 p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-rose-700 flex items-center gap-1.5">
+                                <XCircle className="h-4 w-4 text-rose-600" />
+                                <span>Pesanan Dibatalkan (Void)</span>
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-500 bg-white border border-rose-200 px-2 py-0.5 rounded">
+                                Tetap Tersimpan di Sistem
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-rose-600 leading-snug">
+                              Pesanan ini dibatalkan namun riwayat tidak hilang. Anda dapat menghubungi pembeli atau memulihkan statusnya kapan saja.
+                            </p>
+                            <div className="flex items-center gap-2 pt-1">
+                              <button
+                                onClick={() => handleRestoreOrder(order.id)}
+                                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-black text-white py-2 px-3 text-xs font-bold transition shadow-xs"
+                              >
+                                <span>↺ Pulihkan Pesanan</span>
+                              </button>
+                              {order.customer_phone && (
+                                <a
+                                  href={`https://wa.me/${order.customer_phone.replace(/\D/g, "").replace(/^0/, "62")}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center justify-center gap-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white p-2 text-xs font-bold transition shadow-xs"
+                                  title="Chat WhatsApp Pembeli"
+                                >
+                                  <Flaticon name="whatsapp" variant="brands" className="text-xs" />
+                                  <span>Chat WA</span>
+                                </a>
                               )}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="shrink-0 bg-sky-600 hover:bg-sky-700 text-white font-bold p-1.5 px-2.5 rounded-lg text-xs inline-flex items-center gap-1 transition shadow-xs"
-                              title="Kirim Penugasan & Link Google Maps ke WhatsApp Kurir"
-                            >
-                              <Flaticon name="whatsapp" variant="brands" className="text-xs" />
-                              <span>Kirim Kurir</span>
-                            </a>
+                              <button
+                                onClick={() => setSelectedOrderDetail(order)}
+                                className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white p-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                                title="Lihat Detail Pesanan"
+                              >
+                                <span>Detail</span>
+                              </button>
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          <>
+                            {/* Selector 5 Kurir WhatsApp Dieng */}
+                            <div className="rounded-xl border border-sky-200 bg-sky-50/70 p-2.5 text-xs space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-sky-900 flex items-center gap-1">
+                                  <span>🛵</span>
+                                  <span>Pilih Kurir Dieng:</span>
+                                </span>
+                                <span className="text-[10px] font-bold text-sky-700 bg-white border border-sky-200 px-1.5 py-0.5 rounded">
+                                  5 Nomor Siap Antar
+                                </span>
+                              </div>
 
-                        <div className="flex justify-between items-center text-xs pt-1">
-                          <span className="font-medium text-slate-500">Total Tagihan:</span>
-                          <span className="font-black text-amber-600 text-sm">
-                            {formatRupiah(order.total_amount)}
-                          </span>
-                        </div>
+                              <div className="flex items-center gap-1.5">
+                                <select
+                                  value={selectedCouriers[order.id] || "k1"}
+                                  onChange={(e) =>
+                                    setSelectedCouriers({
+                                      ...selectedCouriers,
+                                      [order.id]: e.target.value,
+                                    })
+                                  }
+                                  className="w-full text-[11px] font-semibold bg-white border border-sky-300 rounded-lg p-1.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                                >
+                                  {DIENG_COURIERS.map((c) => (
+                                    <option key={c.id} value={c.id}>
+                                      {c.name} ({c.phone}) - {c.zone}
+                                    </option>
+                                  ))}
+                                </select>
 
-                        {order.payment_status !== "settlement" && (
-                          <button
-                            onClick={() => handleConfirmCash(order.id)}
-                            className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 text-xs font-bold transition shadow-xs cursor-pointer"
-                          >
-                            <Check className="h-3.5 w-3.5 stroke-[3]" />
-                            <span>Konfirmasi / ACC Pembayaran Lunas</span>
-                          </button>
+                                <a
+                                  href={getAssignCourierWhatsAppUrl(
+                                    order,
+                                    DIENG_COURIERS.find(
+                                      (c) => c.id === (selectedCouriers[order.id] || "k1")
+                                    ) || DIENG_COURIERS[0]
+                                  )}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="shrink-0 bg-sky-600 hover:bg-sky-700 text-white font-bold p-1.5 px-2.5 rounded-lg text-xs inline-flex items-center gap-1 transition shadow-xs"
+                                  title="Kirim Penugasan & Link Google Maps ke WhatsApp Kurir"
+                                >
+                                  <Flaticon name="whatsapp" variant="brands" className="text-xs" />
+                                  <span>Kirim Kurir</span>
+                                </a>
+                              </div>
+                            </div>
+
+                            <div className="flex justify-between items-center text-xs pt-1">
+                              <span className="font-medium text-slate-500">Total Tagihan:</span>
+                              <span className="font-black text-amber-600 text-sm">
+                                {formatRupiah(order.total_amount)}
+                              </span>
+                            </div>
+
+                            {order.payment_status !== "settlement" && (
+                              <button
+                                onClick={() => handleConfirmCash(order.id)}
+                                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 text-xs font-bold transition shadow-xs cursor-pointer"
+                              >
+                                <Check className="h-3.5 w-3.5 stroke-[3]" />
+                                <span>Konfirmasi / ACC Pembayaran Lunas</span>
+                              </button>
+                            )}
+
+                            {/* WhatsApp Receipt & Direct Chat to Buyer */}
+                            {order.customer_phone && (
+                              <div className="grid grid-cols-2 gap-1.5">
+                                <a
+                                  href={getBuyerAcceptedWhatsAppUrl(order)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center justify-center gap-1 rounded-xl bg-[#292a23] hover:bg-black text-[#f4ce00] py-2 px-2 text-[11px] font-bold transition shadow-xs"
+                                  title="Kabari Pembeli Pesanan Di-ACC via WA"
+                                >
+                                  <Flaticon name="comment-alt-dots" className="text-xs" />
+                                  <span>Kabari Pembeli</span>
+                                </a>
+
+                                <a
+                                  href={getBuyerReceiptWhatsAppUrl(order)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center justify-center gap-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-2 text-[11px] font-bold transition shadow-xs"
+                                  title="Kirim Struk Pembayaran Resmi ke WhatsApp Pembeli"
+                                >
+                                  <Flaticon name="whatsapp" variant="brands" className="text-xs" />
+                                  <span>Struk ke WA</span>
+                                </a>
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-1.5 pt-0.5">
+                              <button
+                                onClick={() => setSelectedOrderDetail(order)}
+                                className="flex items-center justify-center gap-1 rounded-xl border border-amber-300 bg-amber-50 p-2 text-xs font-bold text-amber-900 hover:bg-amber-100 transition"
+                                title="Buka Pop Up Modal Rincian Lengkap"
+                              >
+                                <span>Detail</span>
+                              </button>
+
+                              <button
+                                onClick={() => printReceiptViaBrowser(order)}
+                                className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white p-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                                title="Cetak Struk Thermal Kasir"
+                              >
+                                <Printer className="h-4 w-4 text-slate-600" />
+                              </button>
+
+                              <button
+                                onClick={() => handleCancelOrder(order.id)}
+                                className="flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 p-2 text-xs font-bold text-rose-600 hover:bg-rose-100 transition"
+                                title="Batalkan Pesanan (Void)"
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </button>
+
+                              {nextAction && (
+                                <button
+                                  onClick={() => updateOrderStatus(order.id, nextAction.next)}
+                                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-3 text-xs font-bold transition shadow-xs ${nextAction.color}`}
+                                >
+                                  <span>{nextAction.label}</span>
+                                  <ArrowRight className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </>
                         )}
-
-                        {/* WhatsApp Receipt Button to Buyer */}
-                        {order.customer_phone && (
-                          <a
-                            href={getBuyerReceiptWhatsAppUrl(order)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 text-xs font-bold transition shadow-xs"
-                            title="Kirim Struk Pembayaran Resmi ke WhatsApp Pembeli"
-                          >
-                            <Flaticon name="whatsapp" variant="brands" className="text-xs" />
-                            <span>Kirim Struk Resmi ke WA Pembeli</span>
-                          </a>
-                        )}
-
-                        <div className="flex items-center gap-1.5 pt-0.5">
-                          <button
-                            onClick={() => setSelectedOrderDetail(order)}
-                            className="flex items-center justify-center gap-1 rounded-xl border border-amber-300 bg-amber-50 p-2 text-xs font-bold text-amber-900 hover:bg-amber-100 transition"
-                            title="Buka Pop Up Modal Rincian Lengkap"
-                          >
-                            <span>Detail</span>
-                          </button>
-
-                          <button
-                            onClick={() => printReceiptViaBrowser(order)}
-                            className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white p-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
-                            title="Cetak Struk Thermal Kasir"
-                          >
-                            <Printer className="h-4 w-4 text-slate-600" />
-                          </button>
-
-                          <button
-                            onClick={() => handleCancelOrder(order.id)}
-                            className="flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 p-2 text-xs font-bold text-rose-600 hover:bg-rose-100 transition"
-                            title="Batalkan Pesanan (Void)"
-                          >
-                            <XCircle className="h-4 w-4" />
-                          </button>
-
-                          {nextAction && (
-                            <button
-                              onClick={() => updateOrderStatus(order.id, nextAction.next)}
-                              className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-3 text-xs font-bold transition shadow-xs ${nextAction.color}`}
-                            >
-                              <span>{nextAction.label}</span>
-                              <ArrowRight className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                        </div>
                       </div>
                     </div>
                   );
@@ -1050,7 +1404,7 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
           </div>
         )}
 
-        {/* View 3: All Settled Transactions with Expanded Date Filter & CSV Export */}
+        {/* View 3: All Settled Transactions with Expanded Date Filter & Excel/PDF Export */}
         {activeTab === "transactions" && (
           <div className="space-y-4">
             {/* Header & Filter Card */}
@@ -1066,19 +1420,58 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
-                    Ditemukan <strong className="text-slate-800">{settledOrders.length} transaksi lunas</strong> • Total Omzet:{" "}
+                    Ditemukan <strong className="text-slate-800">{filteredTransactions.length} pesanan</strong> ({settledOrders.length} lunas) • Total Omzet Lunas:{" "}
                     <strong className="text-emerald-700 font-bold">{formatRupiah(totalOmzet)}</strong>
                   </p>
                 </div>
 
-                {/* Export CSV Button */}
-                <button
-                  onClick={handleExportCSV}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 px-3.5 py-2 text-xs font-bold text-white transition shadow-2xs active:scale-95 shrink-0"
-                >
-                  <Download className="h-4 w-4" />
-                  <span>Download Laporan CSV</span>
-                </button>
+                {/* Export Excel & PDF Buttons */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={handleExportExcel}
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white transition shadow-2xs active:scale-95"
+                    title="Unduh laporan penjualan berformat Excel (.csv UTF-8)"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>Ekspor Excel</span>
+                  </button>
+
+                  <button
+                    onClick={handleExportPDF}
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-black px-3.5 py-2 text-xs font-bold text-[#f4ce00] transition shadow-2xs active:scale-95 border border-slate-800"
+                    title="Cetak atau unduh dokumen PDF resmi bertema Dioleh - oleh Dieng"
+                  >
+                    <Printer className="h-4 w-4" />
+                    <span>Ekspor Laporan PDF</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Status Filter Chips for Transactions */}
+              <div className="flex flex-wrap items-center gap-2 pt-1 border-b border-slate-100 pb-3">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Status Transaksi:
+                </span>
+                {[
+                  { id: "all", label: "Semua Status", count: orders.length },
+                  { id: "settlement", label: "Lunas (Berhasil)", count: orders.filter((o) => o.payment_status === "settlement").length },
+                  { id: "failed", label: "Dibatalkan / Void", count: orders.filter((o) => o.payment_status === "failed").length },
+                ].map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setTransactionStatusFilter(s.id as any)}
+                    className={`rounded-xl px-3 py-1 text-xs font-bold transition flex items-center gap-1.5 ${
+                      transactionStatusFilter === s.id
+                        ? "bg-slate-900 text-white shadow-2xs"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    <span>{s.label}</span>
+                    <span className="rounded-full bg-white/20 px-1.5 py-0.2 text-[10px]">
+                      {s.count}
+                    </span>
+                  </button>
+                ))}
               </div>
 
               {/* Filter Controls: Presets + Date Range Selector */}
@@ -1200,22 +1593,22 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
                     <th className="px-4 py-3">Waktu</th>
                     <th className="px-4 py-3">Tujuan &amp; Titik Maps</th>
                     <th className="px-4 py-3">Pemesan &amp; WhatsApp</th>
-                    <th className="px-4 py-3">Metode</th>
+                    <th className="px-4 py-3">Status Bayar</th>
                     <th className="px-4 py-3">Item Pesanan</th>
                     <th className="px-4 py-3">Total Nominal</th>
-                    <th className="px-4 py-3">Status Pengiriman</th>
+                    <th className="px-4 py-3">Status Antar</th>
                     <th className="px-4 py-3 text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {settledOrders.length === 0 ? (
+                  {filteredTransactions.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="py-8 text-center text-slate-400">
                         Tidak ada transaksi pada filter ini
                       </td>
                     </tr>
                   ) : (
-                    settledOrders.map((order) => (
+                    filteredTransactions.map((order) => (
                       <tr key={order.id} className="hover:bg-slate-50/80 transition">
                         <td className="px-4 py-3 font-mono font-bold text-slate-900">
                           {order.order_number}
@@ -1251,13 +1644,19 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
-                              order.payment_type === "cash"
-                                ? "bg-emerald-100 text-emerald-800"
-                                : "bg-sky-100 text-sky-800"
+                            className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                              order.payment_status === "settlement"
+                                ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                : order.payment_status === "failed"
+                                ? "bg-rose-100 text-rose-800 border border-rose-200"
+                                : "bg-amber-100 text-amber-800 border border-amber-200"
                             }`}
                           >
-                            {order.payment_type === "cash" ? "Tunai (Cash)" : "QRIS"}
+                            {order.payment_status === "settlement"
+                              ? "Lunas"
+                              : order.payment_status === "failed"
+                              ? "Dibatalkan"
+                              : "Pending"}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-slate-700 max-w-xs truncate">
@@ -1270,13 +1669,24 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
                           {getStatusBadge(order.order_status)}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={() => printReceiptViaBrowser(order)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition"
-                          >
-                            <Printer className="h-3 w-3" />
-                            <span>Struk</span>
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            {order.payment_status === "failed" ? (
+                              <button
+                                onClick={() => handleRestoreOrder(order.id)}
+                                className="inline-flex items-center gap-1 rounded-lg bg-slate-900 text-white px-2 py-1 text-[10px] font-bold hover:bg-black transition"
+                                title="Pulihkan pesanan yang dibatalkan"
+                              >
+                                <span>Pulihkan</span>
+                              </button>
+                            ) : null}
+                            <button
+                              onClick={() => printReceiptViaBrowser(order)}
+                              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition"
+                            >
+                              <Printer className="h-3 w-3" />
+                              <span>Struk</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -1303,12 +1713,12 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
                     </h3>
                   </div>
                   <p className="text-xs text-[#727168] mt-1 max-w-2xl">
-                    Produk di bawah ini tersinkronisasi 100% dengan katalog pembeli. Jika stok fisik habis atau harga berubah, ubah status di sini dan katalog pembeli akan langsung terupdate real-time.
+                    Kelola penuh katalog oleh-oleh Dieng: tambah produk baru, edit nama, foto, deskripsi, harga, atau hapus produk. Perubahan tersinkronisasi langsung ke katalog pembeli.
                   </p>
                 </div>
 
-                {/* Stock Stats Pills */}
-                <div className="flex items-center gap-2 shrink-0">
+                {/* Stock Stats Pills & Add Product Button */}
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
                   <span className="rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-800 flex items-center gap-1.5">
                     <Flaticon name="check-circle" className="text-xs text-emerald-600" />
                     <span>{products.filter((p) => p.is_available !== false).length} Tersedia</span>
@@ -1317,6 +1727,14 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
                     <Flaticon name="cross-circle" className="text-xs text-rose-600" />
                     <span>{products.filter((p) => p.is_available === false).length} Habis</span>
                   </span>
+
+                  <button
+                    onClick={handleOpenAddProduct}
+                    className="flex items-center gap-1.5 rounded-xl bg-[#292a23] hover:bg-black text-[#f4ce00] px-3.5 py-1.5 text-xs font-bold transition shadow-xs cursor-pointer"
+                  >
+                    <Flaticon name="plus" className="text-xs" />
+                    <span>+ Tambah Produk Baru</span>
+                  </button>
                 </div>
               </div>
 
@@ -1461,12 +1879,34 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
                         </div>
 
                         {/* Card Action Footer */}
-                        <div className="p-4 sm:p-5 pt-0">
+                        <div className="p-4 sm:p-5 pt-0 space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditProduct(product)}
+                              className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 py-2 px-3 text-xs font-bold text-slate-800 transition shadow-2xs"
+                              title="Edit Foto, Nama, Deskripsi, Kemasan & Harga"
+                            >
+                              <Flaticon name="edit" className="text-xs text-[#90802a]" />
+                              <span>Edit Produk</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteProduct(product.id, product.name)}
+                              className="flex items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 py-2 px-3 text-xs font-bold text-rose-700 transition"
+                              title="Hapus produk ini dari katalog"
+                            >
+                              <Flaticon name="trash" className="text-xs" />
+                              <span>Hapus</span>
+                            </button>
+                          </div>
+
                           <button
                             type="button"
                             disabled={isUpdating}
                             onClick={() => handleToggleStock(product.id, isAvailable)}
-                            className={`w-full flex items-center justify-center gap-2 rounded-2xl py-2.5 px-4 text-xs font-bold transition shadow-xs disabled:opacity-50 ${
+                            className={`w-full flex items-center justify-center gap-2 rounded-xl py-2 px-4 text-xs font-bold transition shadow-xs disabled:opacity-50 ${
                               isAvailable
                                 ? "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
                                 : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-500/20"
@@ -1754,6 +2194,238 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* POP UP MODAL TAMBAH & EDIT PRODUK OLEH-OLEH */}
+        {isAddProductOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto"
+            onClick={() => {
+              setIsAddProductOpen(false);
+              setEditingProduct(null);
+            }}
+          >
+            <div
+              className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-6 max-h-[92vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between border-b border-slate-100 bg-[#292a23] px-5 py-4 text-white">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f4ce00] text-black shadow-xs">
+                    <Flaticon name="box-alt" className="text-sm" />
+                  </span>
+                  <div>
+                    <h3 className="text-base font-black tracking-tight text-white">
+                      {editingProduct ? "Edit Informasi Produk" : "Tambah Produk Baru"}
+                    </h3>
+                    <p className="text-[11px] text-[#dedad0]">
+                      Katalog Dioleh - oleh Dieng Wonosobo
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddProductOpen(false);
+                    setEditingProduct(null);
+                  }}
+                  className="rounded-xl bg-white/10 hover:bg-white/20 p-2 text-white/80 hover:text-white transition"
+                >
+                  <Flaticon name="cross" className="text-xs" />
+                </button>
+              </div>
+
+              {/* Form Content */}
+              <form onSubmit={handleSubmitProductForm} className="overflow-y-auto p-5 sm:p-6 space-y-4 text-xs">
+                {/* Field 1: Nama Produk & Kategori */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <label className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">
+                      Nama Produk <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Contoh: Carica Spesial Dieng"
+                      value={productForm.name}
+                      onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 focus:bg-white focus:border-[#90802a] focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">
+                      Kategori <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={productForm.group}
+                      onChange={(e) => setProductForm({ ...productForm, group: e.target.value as any })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 focus:bg-white focus:border-[#90802a] focus:outline-none"
+                    >
+                      <option value="Carica">Carica</option>
+                      <option value="Makanan">Makanan</option>
+                      <option value="Camilan">Camilan</option>
+                      <option value="Minuman">Minuman</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Field 2: Kemasan/Isi & Harga Jual */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">
+                      Kemasan / Isi Varian <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Contoh: 6 cup × 115 g atau 6 bungkus"
+                      value={productForm.pack}
+                      onChange={(e) => setProductForm({ ...productForm, pack: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 focus:bg-white focus:border-[#90802a] focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">
+                      Harga Jual Paket (Rp) <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={1000}
+                      step={500}
+                      placeholder="Contoh: 25000"
+                      value={productForm.price}
+                      onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-amber-700 focus:bg-white focus:border-[#90802a] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Field 3: Stok Kuantitas & Ketersediaan */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">
+                      Stok Fisik Tersedia (Unit/Paket)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={productForm.stock_qty}
+                      onChange={(e) => setProductForm({ ...productForm, stock_qty: Number(e.target.value) })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 focus:bg-white focus:border-[#90802a] focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">
+                      Status Ketersediaan
+                    </label>
+                    <select
+                      value={productForm.is_available ? "true" : "false"}
+                      onChange={(e) => setProductForm({ ...productForm, is_available: e.target.value === "true" })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 focus:bg-white focus:border-[#90802a] focus:outline-none"
+                    >
+                      <option value="true">Tersedia (Bisa Dipesan)</option>
+                      <option value="false">Stok Habis (Sold Out)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Field 4: Foto Produk dengan Opsi Preset Cepat */}
+                <div className="space-y-2">
+                  <label className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">
+                    URL / Path Foto Produk
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="https://... atau /images/..."
+                      value={productForm.image}
+                      onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono text-slate-700 focus:bg-white focus:border-[#90802a] focus:outline-none"
+                    />
+                    {productForm.image && (
+                      <div className="h-9 w-9 shrink-0 rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+                        <img
+                          src={productForm.image}
+                          alt="Preview"
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = "none";
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500">
+                    <span className="font-bold">Preset Lokal:</span>
+                    <button
+                      type="button"
+                      onClick={() => setProductForm({ ...productForm, image: "/images/mie-ongklok.jpg" })}
+                      className="rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 text-amber-900 font-semibold"
+                    >
+                      Mie Ongklok
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProductForm({ ...productForm, image: "/images/purwaceng.jpg" })}
+                      className="rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 text-amber-900 font-semibold"
+                    >
+                      Purwaceng
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProductForm({ ...productForm, image: "/images/hero-dieng.jpg" })}
+                      className="rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 text-amber-900 font-semibold"
+                    >
+                      Hero Titik 0 Dieng
+                    </button>
+                  </div>
+                </div>
+
+                {/* Field 5: Deskripsi Produk */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">
+                    Deskripsi Produk &amp; Informasi Rasa
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Tuliskan keterangan rasa, keunggulan, atau cara penyajian oleh-oleh..."
+                    value={productForm.description}
+                    onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-800 focus:bg-white focus:border-[#90802a] focus:outline-none"
+                  />
+                </div>
+
+                {/* Modal Form Actions */}
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddProductOpen(false);
+                      setEditingProduct(null);
+                    }}
+                    className="rounded-xl bg-slate-100 hover:bg-slate-200 px-4 py-2 text-xs font-bold text-slate-700 transition"
+                  >
+                    Batal
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="flex items-center gap-1.5 rounded-xl bg-[#292a23] hover:bg-black text-[#f4ce00] px-5 py-2 text-xs font-bold transition shadow-xs"
+                  >
+                    <Flaticon name="check-circle" className="text-xs" />
+                    <span>{editingProduct ? "Simpan Perubahan" : "Terbitkan ke Katalog"}</span>
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

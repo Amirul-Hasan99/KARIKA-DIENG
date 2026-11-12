@@ -1,9 +1,9 @@
 @echo off
-title Karika Dieng - Pusat Oleh-Oleh Khas Dieng Launcher
+title Dioleh - oleh Dieng - Pusat Oleh-Oleh Khas Dieng Launcher
 color 0A
 
 echo ====================================================================
-echo             KARIKA DIENG - PUSAT OLEH-OLEH KHAS DIENG
+echo             DIOLEH - OLEH DIENG - PUSAT OLEH-OLEH KHAS DIENG
 echo ====================================================================
 echo.
 
@@ -51,7 +51,7 @@ if exist ".next\BUILD_ID" (
 :: 5. Tampilkan Navigasi URL
 echo ====================================================================
 echo  Server berjalan di:
-echo    - Beranda Karika Dieng: http://localhost:3000
+echo    - Beranda Toko        : http://localhost:3000
 echo    - Katalog Produk      : http://localhost:3000/catalog
 echo    - Pantau Pesanan      : http://localhost:3000/orders
 echo    - Admin Dashboard     : http://localhost:3000/admin
