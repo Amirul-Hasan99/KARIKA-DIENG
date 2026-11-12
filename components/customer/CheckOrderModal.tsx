@@ -209,7 +209,7 @@ export default function CheckOrderModal({
                           </span>
                           {isLastActive && (
                             <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 animate-pulse">
-                              <Flaticon name="sparkles" className="text-[10px]" /> Sedang Aktif
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 inline-block" /> Sedang Aktif
                             </span>
                           )}
                         </div>

@@ -378,7 +378,7 @@ export default function CatalogPage() {
         <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[.2em] text-[#90802a] flex items-center gap-1.5">
-              <Flaticon name="sparkles" variant="sr" className="text-xs text-[#90802a]" />
+              <Flaticon name="box-alt" variant="rr" className="text-xs text-[#90802a]" />
               Oleh-oleh Wonosobo · dikemas isi enam
             </p>
             <h1 className="mt-2 text-4xl font-extrabold tracking-tight sm:text-5xl text-[#24251f]">

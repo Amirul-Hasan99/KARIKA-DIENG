@@ -339,7 +339,7 @@ export default function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
               <div className="space-y-4 pt-1">
                 <div className="text-center">
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-[11px] font-bold text-amber-800">
-                    <Flaticon name="sparkles" className="text-xs text-amber-600" />
+                    <Flaticon name="qr" variant="sr" className="text-xs text-amber-600" />
                     <span>Simulasi Pembayaran Midtrans QRIS</span>
                   </span>
                   <h3 className="text-base font-black text-slate-900 mt-2">

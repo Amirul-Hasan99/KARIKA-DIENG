@@ -14,7 +14,7 @@ export interface KarikaProduct {
 
 export const KARIKA_CATEGORIES = [
   { id: "Semua", name: "Semua Produk", icon: "box-alt" },
-  { id: "Carica", name: "Carica Dieng", icon: "sparkles" },
+  { id: "Carica", name: "Carica Dieng", icon: "box-alt" },
   { id: "Makanan", name: "Makanan Khas", icon: "restaurant" },
   { id: "Camilan", name: "Camilan Renyah", icon: "cookie" },
   { id: "Minuman", name: "Minuman Herbal", icon: "mug-hot-alt" },

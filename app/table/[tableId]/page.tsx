@@ -153,7 +153,7 @@ export default function TableOrderPage() {
       case "cat-coffee":
         return <Flaticon name="mug-hot-alt" className="text-sm" />;
       case "cat-manual":
-        return <Flaticon name="sparkles" className="text-sm" />;
+        return <Flaticon name="box-alt" className="text-sm" />;
       case "cat-non-coffee":
         return <Flaticon name="flame" className="text-sm" />;
       case "cat-savory-snack":
@@ -322,7 +322,7 @@ export default function TableOrderPage() {
                     : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
-                <Flaticon name="sparkles" className="text-xs" />
+                <Flaticon name="box-alt" className="text-xs" />
                 <span>Semua Menu</span>
               </button>
 

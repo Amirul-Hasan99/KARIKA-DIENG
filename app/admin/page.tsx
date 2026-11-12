@@ -24,7 +24,6 @@ import {
   DollarSign,
   TrendingUp,
   ShoppingBag,
-  Sparkles,
   QrCode,
   Store,
   Download,
@@ -308,8 +307,8 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
   };
 
-  // Generate WhatsApp Acceptance & Thank You Chat to Buyer
-  const getBuyerAcceptedWhatsAppUrl = (order: Order) => {
+  // Generate Unified WhatsApp Confirmation link to Buyer tailored by Payment Type (QRIS vs Cash/COD)
+  const getBuyerConfirmationWhatsAppUrl = (order: Order) => {
     const cleanPhone = (order.customer_phone || "").replace(/\D/g, "").replace(/^0/, "62");
     if (!cleanPhone) return "#";
 
@@ -317,16 +316,55 @@ Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati l
       ? `${window.location.origin}/orders/${order.id}`
       : `https://dioleh-oleh-dieng.vercel.app/orders/${order.id}`;
 
-    const message = `Halo Kak ${order.customer_name || "Pelanggan"}, terima kasih banyak telah memesan di *Dioleh - oleh Dieng*! 🙏
+    const itemsSummary = order.items
+      .map((item) => `- ${item.qty}x ${item.name} (${formatRupiah(item.subtotal)})`)
+      .join("\n");
 
-Kabar baik, pembayaran untuk pesanan *#${order.order_number}* telah kami terima & di-ACC dengan baik. ✅
+    const isCashOrCod = order.payment_type === "cash" || order.payment_type === "cod";
 
-Paket oleh-oleh pilihan Anda saat ini sedang dikemas rapi dan higienis. Kurir kami segera meluncur mengantarkan pesanan langsung ke penginapan/villa Anda di sekitar Dieng. 🛵📦
+    let message = "";
 
-Pantau live status perjalanan kurir di link berikut:
+    if (isCashOrCod) {
+      // Template untuk metode bayar Cash / COD di tempat
+      message = `Halo Kak *${order.customer_name || "Pelanggan"}*, terima kasih banyak telah memesan di *Dioleh - oleh Dieng*! 🙏
+
+Pesanan Anda dengan nomor *#${order.order_number}* telah kami terima dan terkonfirmasi dengan metode pembayaran *COD (Bayar Tunai di Tempat)* 💵
+
+*RINCIAN PESANAN:*
+${itemsSummary}
+*Total Tagihan: ${formatRupiah(order.total_amount)}*
+
+*ALAMAT & TITIK PENGANTARAN:*
+${order.delivery_address || "Kawasan Penginapan Dataran Tinggi Dieng"}
+${order.coordinates ? `Titik Google Maps: https://www.google.com/maps/search/?api=1&query=${order.coordinates.lat},${order.coordinates.lng}` : ""}
+
+Mohon kesediaannya menunggu di titik pengiriman yang telah ditentukan, serta mempersiapkan uang tunai pas sebesar *${formatRupiah(order.total_amount)}* saat kurir kami tiba di lokasi pengantaran ya Kak.
+
+Kurir kami sedang menyiapkan paket oleh-oleh hangat Anda dan segera meluncur ke lokasi. Pantau status live kurir di link ini:
 ${trackingUrl}
 
-Jika ada petunjuk arah atau patokan tambahan, silakan balas pesan ini ya Kak. Selamat menikmati liburan di Dataran Tinggi Dieng! 🌄`;
+Jika ada patokan tambahan, silakan balas chat ini ya Kak. Terima kasih banyak! 🛵`;
+    } else {
+      // Template untuk metode bayar QRIS (Sudah bayar / lunas)
+      message = `Halo Kak *${order.customer_name || "Pelanggan"}*, terima kasih banyak telah memesan di *Dioleh - oleh Dieng*! 🙏
+
+Pesanan Anda dengan nomor *#${order.order_number}* telah kami verifikasi dan pembayaran via *QRIS (${formatRupiah(order.total_amount)})* telah berhasil diterima (LUNAS) ✅
+
+*RINCIAN PESANAN:*
+${itemsSummary}
+*Total: ${formatRupiah(order.total_amount)}*
+
+*ALAMAT & TITIK PENGANTARAN:*
+${order.delivery_address || "Kawasan Penginapan Dataran Tinggi Dieng"}
+${order.coordinates ? `Titik Google Maps: https://www.google.com/maps/search/?api=1&query=${order.coordinates.lat},${order.coordinates.lng}` : ""}
+
+Saat ini pesanan Anda sedang dikemas dengan rapi dan higienis. Kurir kami segera berangkat dalam perjalanan menuju lokasi Anda. Mohon ditunggu kedatangan kurir kami ya Kak! 🛵
+
+Pantau status live perjalanan kurir di link ini:
+${trackingUrl}
+
+Jika ada petunjuk arah atau patokan tambahan, silakan balas chat ini ya Kak. Selamat menikmati liburan di Dieng! 🌄`;
+    }
 
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
   };
@@ -1091,16 +1129,9 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas pesan ini ya Kak. Se
                         <div className="flex items-start justify-between border-b border-slate-100 pb-3">
                           <div className="space-y-1 w-full">
                             <div className="flex items-center justify-between gap-2">
-                              <button
-                                onClick={() => setSelectedOrderDetail(order)}
-                                className="text-base font-black text-slate-900 hover:text-amber-700 transition flex items-center gap-1 group text-left cursor-pointer"
-                                title="Klik untuk membuka detail lengkap pesanan"
-                              >
-                                <span>ORDER #{order.order_number}</span>
-                                <span className="text-[10px] font-bold text-amber-800 bg-amber-100 group-hover:bg-amber-200 border border-amber-300 px-1.5 py-0.5 rounded ml-1 transition">
-                                  Detail ↗
-                                </span>
-                              </button>
+                              <h3 className="text-base font-black text-slate-900 tracking-tight">
+                                ORDER #{order.order_number}
+                              </h3>
                               <div className="flex items-center gap-1.5">
                                 {getStatusBadge(order.order_status)}
                                 <span
@@ -1331,31 +1362,18 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas pesan ini ya Kak. Se
                               </button>
                             )}
 
-                            {/* WhatsApp Receipt & Direct Chat to Buyer */}
+                            {/* Single Unified WhatsApp Confirmation to Buyer */}
                             {order.customer_phone && (
-                              <div className="grid grid-cols-2 gap-1.5">
-                                <a
-                                  href={getBuyerAcceptedWhatsAppUrl(order)}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="flex items-center justify-center gap-1 rounded-xl bg-[#292a23] hover:bg-black text-[#f4ce00] py-2 px-2 text-[11px] font-bold transition shadow-xs"
-                                  title="Kabari Pembeli Pesanan Di-ACC via WA"
-                                >
-                                  <Flaticon name="comment-alt-dots" className="text-xs" />
-                                  <span>Kabari Pembeli</span>
-                                </a>
-
-                                <a
-                                  href={getBuyerReceiptWhatsAppUrl(order)}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="flex items-center justify-center gap-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-2 text-[11px] font-bold transition shadow-xs"
-                                  title="Kirim Struk Pembayaran Resmi ke WhatsApp Pembeli"
-                                >
-                                  <Flaticon name="whatsapp" variant="brands" className="text-xs" />
-                                  <span>Struk ke WA</span>
-                                </a>
-                              </div>
+                              <a
+                                href={getBuyerConfirmationWhatsAppUrl(order)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-3 text-xs font-bold transition shadow-xs"
+                                title="Kirim konfirmasi pesanan via WA ke pembeli sesuai metode pembayaran (QRIS / Tunai COD)"
+                              >
+                                <Flaticon name="whatsapp" variant="brands" className="text-sm" />
+                                <span>Konfirmasi Pembeli via WA</span>
+                              </a>
                             )}
 
                             <div className="flex items-center gap-1.5 pt-0.5">
@@ -2148,14 +2166,14 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas pesan ini ya Kak. Se
                 <div className="flex items-center gap-2">
                   {selectedOrderDetail.customer_phone && (
                     <a
-                      href={getBuyerReceiptWhatsAppUrl(selectedOrderDetail)}
+                      href={getBuyerConfirmationWhatsAppUrl(selectedOrderDetail)}
                       target="_blank"
                       rel="noreferrer"
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs inline-flex items-center gap-1.5 transition shadow-xs"
-                      title="Kirim Struk Pembayaran Resmi ke WA Pembeli"
+                      title="Kirim Konfirmasi Pesanan Resmi ke WhatsApp Pembeli"
                     >
                       <Flaticon name="whatsapp" variant="brands" className="text-xs" />
-                      <span>Kirim Struk ke WA Pembeli</span>
+                      <span>Konfirmasi Pembeli via WA</span>
                     </a>
                   )}
 

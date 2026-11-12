@@ -803,7 +803,7 @@ export default function HomePage() {
 
           <div className="max-w-2xl space-y-4">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1 text-xs font-semibold text-[#f4ce00] border border-white/15">
-              <Flaticon name="sparkles" variant="sr" className="text-xs text-[#f4ce00]" />
+              <Flaticon name="check-circle" variant="sr" className="text-xs text-[#f4ce00]" />
               Langsung dari Pengrajin Lokal
             </span>
             <h2 className="text-3xl font-extrabold sm:text-4xl tracking-tight leading-tight">

@@ -2,7 +2,7 @@ import { Category, Table, MenuItem } from "@/types";
 import { INITIAL_KARIKA_PRODUCTS } from "./karika-products-data";
 
 export const initialCategories: Category[] = [
-  { id: "cat-carica", name: "Carica Dieng", sort_order: 1, icon: "sparkles" },
+  { id: "cat-carica", name: "Carica Dieng", sort_order: 1, icon: "box-alt" },
   { id: "cat-makanan", name: "Makanan Khas", sort_order: 2, icon: "restaurant" },
   { id: "cat-camilan", name: "Camilan Renyah", sort_order: 3, icon: "cookie" },
   { id: "cat-minuman", name: "Minuman Herbal", sort_order: 4, icon: "mug-hot-alt" },

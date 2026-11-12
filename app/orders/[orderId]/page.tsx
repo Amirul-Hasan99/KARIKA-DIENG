@@ -354,13 +354,9 @@ Mohon segera di-ACC dan diproses kurir pengantarannya ya Admin. Terima kasih ban
                 }`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f4ce00]/25 px-3 py-1 text-xs font-bold text-[#766600]">
-                    <Flaticon name="sparkles" variant="sr" className="text-xs text-[#b69b00]" />
-                    Pesanan Berhasil Tercatat
-                  </span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-bold text-[#77766f]">
-                      {order.order_number}
+                      NO. PESANAN: #{order.order_number}
                     </span>
                     <button
                       onClick={copyOrderNumber}
