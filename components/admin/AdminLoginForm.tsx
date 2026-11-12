@@ -71,7 +71,7 @@ export default function AdminLoginForm() {
                   name="username"
                   required
                   maxLength={100}
-                  placeholder="karikadieng"
+                  placeholder="Masukkan username admin"
                 />
               </div>
               <div className="space-y-2">
@@ -113,19 +113,6 @@ export default function AdminLoginForm() {
                 )}
               </Button>
             </form>
-            <div className="mt-5 rounded-xl border border-amber-200/80 bg-amber-50/60 p-3.5 text-xs leading-5 text-[#6e5d14]">
-              <strong>Kredensial Login Admin:</strong>
-              <br />
-              Username:{" "}
-              <code className="font-mono font-bold bg-white px-1.5 py-0.5 rounded border border-amber-200">
-                karikadieng
-              </code>
-              <br />
-              Password:{" "}
-              <code className="font-mono font-bold bg-white px-1.5 py-0.5 rounded border border-amber-200">
-                karikadieng000
-              </code>
-            </div>
           </CardContent>
         </Card>
         <p className="mt-6 text-center text-xs text-[#858585]">

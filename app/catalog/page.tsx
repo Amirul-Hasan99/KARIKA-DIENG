@@ -261,32 +261,32 @@ export default function CatalogPage() {
     <main className="min-h-screen bg-[#f8f7f2] text-[#24251f]">
       {/* Top Navbar */}
       <header className="sticky top-0 z-20 border-b border-[#e9e7dc] bg-[#f8f7f2]/95 backdrop-blur">
-        <nav className="mx-auto flex h-[68px] max-w-7xl items-center justify-between px-4 sm:px-8">
-          <div className="flex items-center gap-3">
+        <nav className="mx-auto flex h-[62px] sm:h-[68px] max-w-7xl items-center justify-between px-3 sm:px-8">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link href="/" className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#292a23] text-[#f4ce00] shadow-xs">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#292a23] text-[#f4ce00] shadow-xs shrink-0">
                 <BrandLogoIcon size={16} color="#f4ce00" />
               </span>
-              <span className="text-xl font-black tracking-tight text-[#24251f]">
+              <span className="text-base xs:text-lg sm:text-xl font-black tracking-tight text-[#24251f] whitespace-nowrap">
                 Dioleh - oleh <span className="text-[#90802a]">Dieng</span>
               </span>
             </Link>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Pantau Pengiriman Button */}
             <button
               onClick={() => setShowTrackingModal(true)}
-              className={`relative inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition border ${
+              className={`relative inline-flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold transition border shrink-0 ${
                 activeOrder
                   ? "bg-amber-100/90 text-amber-900 border-amber-300 shadow-xs"
                   : "bg-white text-[#68685f] border-[#e4e1d7] hover:bg-[#f3f0e6]"
               }`}
             >
               <Flaticon name="truck-side" variant="sr" className="text-xs text-[#a28b00]" />
-              <span>Pantau Pesanan</span>
+              <span className="hidden xs:inline">Pantau</span> Pesanan
               {activeOrder && (
-                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-ping ml-0.5" />
               )}
             </button>
 
@@ -294,7 +294,7 @@ export default function CatalogPage() {
               href="https://www.google.com/maps/search/?api=1&query=Titik+0+Dieng"
               target="_blank"
               rel="noreferrer"
-              className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium text-[#68685f] hover:bg-white sm:flex"
+              className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium text-[#68685f] hover:bg-white md:flex"
             >
               <Flaticon name="marker" variant="sr" className="text-xs text-[#a28b00]" />
               Area antar 8 km
@@ -302,10 +302,10 @@ export default function CatalogPage() {
 
             <button
               onClick={() => setCheckout(true)}
-              className="relative inline-flex items-center gap-2 rounded-full bg-[#282922] px-4 py-2.5 text-sm font-semibold text-white hover:bg-black transition cursor-pointer"
+              className="relative inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-[#282922] px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-black transition cursor-pointer shrink-0"
             >
               <Flaticon name="shopping-bag" variant="sr" className="text-sm" />
-              <span>Keranjang</span>
+              <span className="hidden xs:inline">Keranjang</span>
               {count > 0 && (
                 <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#f4ce00] px-1 text-[11px] font-bold text-black">
                   {count}

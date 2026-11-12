@@ -216,9 +216,45 @@ export default function OrderTrackingPage() {
     .padStart(2, "0")}`;
 
   const wa = order
-    ? `https://wa.me/6287839439540?text=${encodeURIComponent(
-        `Halo Karika Dieng, pesanan ${order.order_number} a.n. ${order.customer_name} telah saya buat. Mohon konfirmasi kesiapan paket dan kurir.`
-      )}`
+    ? (() => {
+        const adminPhone = "6283122046357";
+        const isSettled = order.payment_status === "settlement";
+        const paymentLabel = order.payment_type === "cod"
+          ? "COD (Bayar Tunai saat Kurir Tiba)"
+          : isSettled
+          ? "QRIS (SUDAH DIBAYAR / LUNAS)"
+          : "QRIS (Menunggu Verifikasi Toko)";
+
+        const itemsList = order.items
+          .map((i) => `• ${i.name} (${i.qty} paket) - Rp${i.subtotal.toLocaleString("id-ID")}`)
+          .join("\n");
+
+        const mapsLink = order.coordinates
+          ? `https://www.google.com/maps/search/?api=1&query=${order.coordinates.lat},${order.coordinates.lng}`
+          : "Sesuai titik penginapan Dieng";
+
+        const msg = `Halo Admin Dioleh - oleh Dieng, saya ingin konfirmasi pesanan saya:
+
+📦 *DATA PESANAN:*
+• No. Order: #${order.order_number}
+• Nama: ${order.customer_name || "Pelanggan"}
+• No. WhatsApp: ${order.customer_phone || "-"}
+• Total Belanja: Rp${order.total_amount.toLocaleString("id-ID")}
+• Metode Bayar: ${paymentLabel}
+• Status Pembayaran: ${isSettled ? "✅ LUNAS (TERVERIFIKASI)" : "⏳ BELUM LUNAS / COD"}
+
+📍 *ALAMAT & TITIK PENGANTARAN:*
+• Patokan/Alamat: ${order.delivery_address || "-"}
+• Titik Google Maps: ${mapsLink}
+• Radius Jarak: ~${order.delivery_distance_km ?? 8} km dari Titik 0 Dieng
+
+📋 *RINCIAN PAKET OLEH-OLEH:*
+${itemsList}
+
+Mohon segera di-ACC dan diproses kurir pengantarannya ya Admin. Terima kasih banyak! 🙏`;
+
+        return `https://wa.me/${adminPhone}?text=${encodeURIComponent(msg)}`;
+      })()
     : "#";
 
   return (
@@ -732,7 +768,7 @@ export default function OrderTrackingPage() {
                     className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#168a54] px-5 py-4 text-sm font-bold text-white hover:bg-[#137446] transition shadow-md shadow-emerald-700/20"
                   >
                     <Flaticon name="whatsapp" variant="brands" className="text-base" />
-                    <span>Konfirmasi Pesanan ke Toko via WhatsApp</span>
+                    <span>Konfirmasi Pembayaran ke Admin WhatsApp (0831-2204-6357)</span>
                   </a>
                   <p className="mt-2 text-center text-xs text-[#85857c]">
                     Admin toko akan langsung mengecek kesiapan paket dan mengabari kurir pengantar.

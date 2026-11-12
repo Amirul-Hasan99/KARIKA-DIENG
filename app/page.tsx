@@ -137,28 +137,28 @@ export default function HomePage() {
     <div className="min-h-screen bg-[#f8f7f2] text-[#24251f] selection:bg-[#f4ce00] selection:text-black">
       {/* Main Header / Navigation */}
       <header className="sticky top-0 z-30 border-b border-[#e7e4d8] bg-[#f8f7f2]/90 backdrop-blur-md">
-        <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-10">
-          <div className="flex items-center gap-4">
+        <nav className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-10">
+          <div className="flex items-center gap-3">
             <Link
               href="/admin/login"
-              className="flex items-center gap-2.5 group"
+              className="flex items-center gap-2 sm:gap-2.5 group"
               title="Dioleh - oleh Dieng"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#292a23] text-[#f4ce00] shadow-sm transition group-hover:bg-black">
-                <BrandLogoIcon size={20} color="#f4ce00" />
+              <span className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl sm:rounded-2xl bg-[#292a23] text-[#f4ce00] shadow-sm transition group-hover:bg-black shrink-0">
+                <BrandLogoIcon size={18} color="#f4ce00" />
               </span>
               <div className="flex flex-col">
-                <span className="text-2xl font-black tracking-tight text-[#24251f]">
+                <span className="text-base xs:text-lg sm:text-2xl font-black tracking-tight text-[#24251f] whitespace-nowrap">
                   Dioleh - oleh <span className="text-[#90802a]">Dieng</span>
                 </span>
-                <span className="text-[10px] font-semibold text-[#7d7a6e] -mt-1 hidden sm:inline">
+                <span className="text-[10px] font-semibold text-[#7d7a6e] -mt-1 hidden md:inline">
                   Sentra Oleh-Oleh Khas Dataran Tinggi
                 </span>
               </div>
             </Link>
           </div>
 
-          <div className="hidden md:flex items-center gap-7 text-sm font-semibold text-[#5c5a52]">
+          <div className="hidden lg:flex items-center gap-4 text-sm font-semibold text-[#5c5a52]">
             <Link href="/catalog" className="hover:text-black transition">
               Katalog Lengkap
             </Link>
@@ -182,21 +182,21 @@ export default function HomePage() {
             </a>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <Link href={activeOrder ? `/orders/${activeOrder.orderId}` : "/orders"}>
               <Button
                 variant="outline"
                 size="default"
-                className={`relative rounded-full border font-bold text-xs sm:text-sm px-4 gap-1.5 shadow-2xs transition ${
+                className={`relative rounded-full border font-bold text-xs h-8 sm:h-10 px-2.5 sm:px-4 gap-1 sm:gap-1.5 shadow-2xs transition shrink-0 ${
                   activeOrder
                     ? "border-amber-300 bg-amber-100/90 text-amber-900 shadow-xs"
                     : "border-[#d8d5c7] bg-white text-[#24251f] hover:bg-[#faf9f5]"
                 }`}
               >
-                <Flaticon name="truck-side" className="text-sm text-[#90802a]" />
+                <Flaticon name="truck-side" className="text-xs sm:text-sm text-[#90802a]" />
                 <span className="hidden xs:inline">Pantau</span> Pesanan
                 {activeOrder && (
-                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-ping ml-1" />
+                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-ping ml-0.5 sm:ml-1" />
                 )}
               </Button>
             </Link>
@@ -204,10 +204,11 @@ export default function HomePage() {
               <Button
                 variant="secondary"
                 size="default"
-                className="rounded-full shadow-xs hover:shadow-md transition gap-2 font-bold px-5 bg-[#f4ce00] hover:bg-[#dfba00] text-[#24251f]"
+                className="rounded-full shadow-xs hover:shadow-md transition gap-1.5 font-bold h-8 sm:h-10 px-3 sm:px-5 bg-[#f4ce00] hover:bg-[#dfba00] text-[#24251f] text-xs sm:text-sm shrink-0"
               >
-                <Flaticon name="shopping-bag" variant="sr" className="text-base" />
-                <span>Beli Oleh-Oleh</span>
+                <Flaticon name="shopping-bag" variant="sr" className="text-sm sm:text-base" />
+                <span className="hidden sm:inline">Beli Oleh-Oleh</span>
+                <span className="sm:hidden">Beli</span>
               </Button>
             </Link>
           </div>

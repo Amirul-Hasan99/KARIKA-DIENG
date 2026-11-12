@@ -38,6 +38,21 @@ import {
 import Flaticon from "@/components/ui/Flaticon";
 import { KarikaProduct, INITIAL_KARIKA_PRODUCTS, KARIKA_CATEGORIES } from "@/lib/karika-products-data";
 
+interface Courier {
+  id: string;
+  name: string;
+  phone: string;
+  zone: string;
+}
+
+const DIENG_COURIERS: Courier[] = [
+  { id: "k1", name: "Kurir 1 - Slamet Dieng", phone: "083122046357", zone: "Dieng Kulon & Kompleks Candi" },
+  { id: "k2", name: "Kurir 2 - Wahyu Sikunir", phone: "081234567891", zone: "Sembungan & Puncak Sikunir" },
+  { id: "k3", name: "Kurir 3 - Budi Telaga", phone: "085678901234", zone: "Telaga Warna & Pengilon" },
+  { id: "k4", name: "Kurir 4 - Agus Prau", phone: "087812345678", zone: "Patakbanteng & Jalur Prau" },
+  { id: "k5", name: "Kurir 5 - Rian Kejajar", phone: "089612345678", zone: "Kejajar & Jalur Wonosobo" },
+];
+
 export default function AdminDashboardPage() {
   const {
     orders,
@@ -51,6 +66,8 @@ export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<"kds" | "transactions" | "stock">("kds");
   const [kdsFilter, setKdsFilter] = useState<"all" | "received" | "cooking" | "ready" | "completed">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedOrderDetail, setSelectedOrderDetail] = useState<Order | null>(null);
+  const [selectedCouriers, setSelectedCouriers] = useState<Record<string, string>>({});
 
   type DateFilterType =
     | "all"
@@ -191,6 +208,89 @@ export default function AdminDashboardPage() {
     } catch (e) {
       console.error("Cancel order error:", e);
     }
+  };
+
+  // Generate WhatsApp Assignment link for selected Courier
+  const getAssignCourierWhatsAppUrl = (order: Order, courier: Courier) => {
+    const gmapsUrl = order.coordinates
+      ? `https://www.google.com/maps/dir/?api=1&destination=${order.coordinates.lat},${order.coordinates.lng}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.delivery_address || "Dieng Wonosobo")}`;
+
+    const itemsText = order.items
+      .map((item) => `• ${item.name} (${item.qty} paket)`)
+      .join("\n");
+
+    const message = `🛵 *TUGAS PENGANTARAN OLEH-OLEH - DIOLEH-OLEH DIENG*
+Halo Mas/Mbak ${courier.name}, ada tugas pengantaran pesanan baru:
+
+📋 *DETAIL ORDER:*
+• No. Order: #${order.order_number}
+• Pemesan: ${order.customer_name || "Pelanggan"} (${order.customer_phone || "-"})
+• Total Belanja: ${formatRupiah(order.total_amount)}
+• Status Bayar: ${
+      order.payment_status === "settlement"
+        ? "✅ SUDAH LUNAS (QRIS) - JANGAN TAGIH KE PEMBELI"
+        : `⚠️ COD / BAYAR DI TEMPAT: ${formatRupiah(order.total_amount)}`
+    }
+
+📍 *RUTE & ALAMAT PENGANTARAN:*
+• Titik Asal: Sentra Dioleh - oleh Dieng (Titik 0 Km)
+• Patokan Alamat: ${order.delivery_address || "Kawasan Dataran Tinggi Dieng"}
+• Estimasi Jarak: ~${order.delivery_distance_km ?? 8} km
+• 🧭 *Link Rute Google Maps:*
+${gmapsUrl}
+
+📦 *RINCIAN PAKET OLEH-OLEH:*
+${itemsText}
+
+Mohon kurir segera ambil paket di sentra Dioleh - oleh Dieng dan meluncur ke lokasi pembeli. Hubungi pembeli jika sudah dekat lokasi. Terima kasih! 🙏`;
+
+    const cleanPhone = courier.phone.replace(/\D/g, "").replace(/^0/, "62");
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+  };
+
+  // Generate WhatsApp Official Receipt link for Buyer
+  const getBuyerReceiptWhatsAppUrl = (order: Order) => {
+    const cleanPhone = (order.customer_phone || "").replace(/\D/g, "").replace(/^0/, "62");
+    if (!cleanPhone) return "#";
+
+    const trackingUrl = typeof window !== "undefined"
+      ? `${window.location.origin}/orders/${order.id}`
+      : `https://dioleh-oleh-dieng.vercel.app/orders/${order.id}`;
+
+    const itemsText = order.items
+      .map((item) => `• ${item.name}\n  ${item.qty} paket × ${formatRupiah(item.price)} = ${formatRupiah(item.subtotal)}`)
+      .join("\n");
+
+    const message = `🧾 *STRUK PEMBAYARAN RESMI - DIOLEH - OLEH DIENG*
+Sentra Oleh-Oleh Khas Dataran Tinggi Dieng & Wonosobo
+Titik 0 Km Dieng · Telp/WA Toko: 0831-2204-6357
+================================
+No. Pesanan : #${order.order_number}
+Waktu Pesan : ${formatOrderTime(order.created_at)}
+Pelanggan   : ${order.customer_name || "Pelanggan"}
+WhatsApp    : ${order.customer_phone || "-"}
+Status      : ✅ SUDAH DI-ACC ADMIN (LUNAS)
+Metode      : ${order.payment_type ? order.payment_type.toUpperCase() : "QRIS"}
+================================
+RINCIAN BELANJA:
+${itemsText}
+================================
+TOTAL PEMBAYARAN : ${formatRupiah(order.total_amount)}
+================================
+📍 *ALAMAT TUJUAN PENGANTARAN:*
+${order.delivery_address || "Kawasan Dataran Tinggi Dieng"}
+${order.coordinates ? `🧭 Koordinat: ${order.coordinates.lat.toFixed(5)}, ${order.coordinates.lng.toFixed(5)}` : ""}
+
+🛵 *STATUS PENGIRIMAN:*
+Pesanan Anda telah kami terima & di-ACC dengan baik. Kurir sedang menyiapkan paket oleh-oleh segar Anda dan segera meluncur ke lokasi!
+
+🔗 *PANTAU LIVE STATUS PENGANTARAN:*
+${trackingUrl}
+
+Matur nuwun sanget sampun blonjo wonten Dioleh - oleh Dieng! Selamat menikmati liburan di Dieng. 🙏✨`;
+
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
   };
 
   // Filtered orders for Antrean Pesanan Oleh-Oleh
@@ -696,9 +796,16 @@ export default function AdminDashboardPage() {
                         <div className="flex items-start justify-between border-b border-slate-100 pb-3">
                           <div className="space-y-1 w-full">
                             <div className="flex items-center justify-between gap-2">
-                              <span className="text-base font-black text-slate-900">
-                                ORDER #{order.order_number}
-                              </span>
+                              <button
+                                onClick={() => setSelectedOrderDetail(order)}
+                                className="text-base font-black text-slate-900 hover:text-amber-700 transition flex items-center gap-1 group text-left cursor-pointer"
+                                title="Klik untuk membuka detail lengkap pesanan"
+                              >
+                                <span>ORDER #{order.order_number}</span>
+                                <span className="text-[10px] font-bold text-amber-800 bg-amber-100 group-hover:bg-amber-200 border border-amber-300 px-1.5 py-0.5 rounded ml-1 transition">
+                                  Detail ↗
+                                </span>
+                              </button>
                               <div className="flex items-center gap-1.5">
                                 {getStatusBadge(order.order_status)}
                                 <span
@@ -819,8 +926,56 @@ export default function AdminDashboardPage() {
                       </div>
 
                       {/* Card Footer */}
-                      <div className="pt-3 border-t border-slate-100 space-y-2">
-                        <div className="flex justify-between items-center text-xs">
+                      <div className="pt-3 border-t border-slate-100 space-y-2.5">
+                        {/* Selector 5 Kurir WhatsApp Dieng */}
+                        <div className="rounded-xl border border-sky-200 bg-sky-50/70 p-2.5 text-xs space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-sky-900 flex items-center gap-1">
+                              <span>🛵</span>
+                              <span>Pilih Kurir Dieng:</span>
+                            </span>
+                            <span className="text-[10px] font-bold text-sky-700 bg-white border border-sky-200 px-1.5 py-0.5 rounded">
+                              5 Nomor Siap Antar
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            <select
+                              value={selectedCouriers[order.id] || "k1"}
+                              onChange={(e) =>
+                                setSelectedCouriers({
+                                  ...selectedCouriers,
+                                  [order.id]: e.target.value,
+                                })
+                              }
+                              className="w-full text-[11px] font-semibold bg-white border border-sky-300 rounded-lg p-1.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                            >
+                              {DIENG_COURIERS.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.name} ({c.phone}) - {c.zone}
+                                </option>
+                              ))}
+                            </select>
+
+                            <a
+                              href={getAssignCourierWhatsAppUrl(
+                                order,
+                                DIENG_COURIERS.find(
+                                  (c) => c.id === (selectedCouriers[order.id] || "k1")
+                                ) || DIENG_COURIERS[0]
+                              )}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="shrink-0 bg-sky-600 hover:bg-sky-700 text-white font-bold p-1.5 px-2.5 rounded-lg text-xs inline-flex items-center gap-1 transition shadow-xs"
+                              title="Kirim Penugasan & Link Google Maps ke WhatsApp Kurir"
+                            >
+                              <Flaticon name="whatsapp" variant="brands" className="text-xs" />
+                              <span>Kirim Kurir</span>
+                            </a>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center text-xs pt-1">
                           <span className="font-medium text-slate-500">Total Tagihan:</span>
                           <span className="font-black text-amber-600 text-sm">
                             {formatRupiah(order.total_amount)}
@@ -830,18 +985,40 @@ export default function AdminDashboardPage() {
                         {order.payment_status !== "settlement" && (
                           <button
                             onClick={() => handleConfirmCash(order.id)}
-                            className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 text-xs font-bold transition shadow-xs"
+                            className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 text-xs font-bold transition shadow-xs cursor-pointer"
                           >
                             <Check className="h-3.5 w-3.5 stroke-[3]" />
-                            <span>Konfirmasi Pembayaran Lunas</span>
+                            <span>Konfirmasi / ACC Pembayaran Lunas</span>
                           </button>
                         )}
 
-                        <div className="flex items-center gap-2">
+                        {/* WhatsApp Receipt Button to Buyer */}
+                        {order.customer_phone && (
+                          <a
+                            href={getBuyerReceiptWhatsAppUrl(order)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 text-xs font-bold transition shadow-xs"
+                            title="Kirim Struk Pembayaran Resmi ke WhatsApp Pembeli"
+                          >
+                            <Flaticon name="whatsapp" variant="brands" className="text-xs" />
+                            <span>Kirim Struk Resmi ke WA Pembeli</span>
+                          </a>
+                        )}
+
+                        <div className="flex items-center gap-1.5 pt-0.5">
+                          <button
+                            onClick={() => setSelectedOrderDetail(order)}
+                            className="flex items-center justify-center gap-1 rounded-xl border border-amber-300 bg-amber-50 p-2 text-xs font-bold text-amber-900 hover:bg-amber-100 transition"
+                            title="Buka Pop Up Modal Rincian Lengkap"
+                          >
+                            <span>Detail</span>
+                          </button>
+
                           <button
                             onClick={() => printReceiptViaBrowser(order)}
                             className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white p-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
-                            title="Cetak Struk Thermal"
+                            title="Cetak Struk Thermal Kasir"
                           >
                             <Printer className="h-4 w-4 text-slate-600" />
                           </button>
@@ -1318,6 +1495,266 @@ export default function AdminDashboardPage() {
                   })}
               </div>
             )}
+          </div>
+        )}
+
+        {/* POP UP MODAL INFORMASI SEPUTAR PESANAN LENGKAP */}
+        {selectedOrderDetail && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto"
+            onClick={() => setSelectedOrderDetail(null)}
+          >
+            <div
+              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-8 max-h-[90vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-amber-50/70 via-white to-amber-50/40 p-4 sm:p-6">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                      ORDER #{selectedOrderDetail.order_number}
+                    </span>
+                    <span
+                      className={`rounded-md px-2 py-0.5 text-xs font-bold ${
+                        selectedOrderDetail.payment_status === "settlement"
+                          ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                          : "bg-amber-50 text-amber-800 border border-amber-300"
+                      }`}
+                    >
+                      {selectedOrderDetail.payment_status === "settlement" ? "Lunas" : "Belum Lunas"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Dibuat pada {formatOrderTime(selectedOrderDetail.created_at)} • Metode:{" "}
+                    {selectedOrderDetail.payment_type
+                      ? selectedOrderDetail.payment_type.toUpperCase()
+                      : "QRIS"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedOrderDetail(null)}
+                  className="rounded-full border border-slate-200 bg-white p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition"
+                  title="Tutup Popup"
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Modal Scrollable Body */}
+              <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs">
+                {/* Identitas Pembeli & WhatsApp */}
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 space-y-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Data Pelanggan &amp; WhatsApp:
+                  </span>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-black text-slate-900">
+                        {selectedOrderDetail.customer_name || "Pelanggan"}
+                      </p>
+                      <p className="font-mono text-slate-600 mt-0.5">
+                        No. WA: {selectedOrderDetail.customer_phone || "-"}
+                      </p>
+                    </div>
+                    {selectedOrderDetail.customer_phone && (
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`https://wa.me/${selectedOrderDetail.customer_phone
+                            .replace(/\D/g, "")
+                            .replace(/^0/, "62")}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl inline-flex items-center gap-1.5 transition shadow-xs"
+                        >
+                          <Flaticon name="whatsapp" variant="brands" className="text-xs" />
+                          <span>Chat WhatsApp</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Alamat & Titik Google Maps Lengkap */}
+                <div className="rounded-2xl border border-amber-200 bg-[#fffdf5] p-4 space-y-3">
+                  <div className="flex items-center justify-between border-b border-amber-100 pb-2">
+                    <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                      <Flaticon name="marker" variant="sr" className="text-sm text-amber-600" />
+                      <span>Lokasi &amp; Patokan Pengantaran Real:</span>
+                    </div>
+                    {selectedOrderDetail.delivery_distance_km ? (
+                      <span className="bg-white border border-amber-200 px-2.5 py-0.5 rounded-full font-bold text-amber-800 text-[10px]">
+                        ~{selectedOrderDetail.delivery_distance_km} km dari Titik 0 Dieng
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="bg-white rounded-xl border border-amber-100 p-3 space-y-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Catatan Alamat / Homestay / Patokan:
+                    </span>
+                    <p className="text-slate-900 font-semibold leading-relaxed text-xs">
+                      {selectedOrderDetail.delivery_address ||
+                        "Tidak ada catatan patokan tambahan."}
+                    </p>
+                  </div>
+
+                  {selectedOrderDetail.coordinates && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                      <span className="font-mono text-[11px] text-slate-600">
+                        GPS: {selectedOrderDetail.coordinates.lat.toFixed(6)},{" "}
+                        {selectedOrderDetail.coordinates.lng.toFixed(6)}
+                      </span>
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${selectedOrderDetail.coordinates.lat},${selectedOrderDetail.coordinates.lng}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-[#292a23] hover:bg-black text-[#f4ce00] font-bold px-3 py-1.5 rounded-xl inline-flex items-center gap-1.5 transition shadow-xs"
+                      >
+                        <span>🧭 Buka Rute Google Maps</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                {/* Rincian Produk Belanja */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Rincian Barang Oleh-Oleh:
+                  </span>
+                  <div className="space-y-2 border-t border-slate-100 pt-2">
+                    {selectedOrderDetail.items.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0"
+                      >
+                        <div>
+                          <p className="font-bold text-slate-900 text-xs">
+                            {item.qty}x {item.name}
+                          </p>
+                          <p className="text-[11px] text-slate-500">
+                            @ {formatRupiah(item.price)}
+                          </p>
+                          {item.notes && (
+                            <p className="text-[10px] text-amber-700 italic bg-amber-50 rounded px-1.5 py-0.5 mt-0.5 inline-block">
+                              Catatan: {item.notes}
+                            </p>
+                          )}
+                        </div>
+                        <span className="font-black text-slate-900 text-xs shrink-0">
+                          {formatRupiah(item.subtotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-200 text-sm">
+                    <span className="font-bold text-slate-700">Total Pembayaran:</span>
+                    <span className="font-black text-amber-600 text-base">
+                      {formatRupiah(selectedOrderDetail.total_amount)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Pilihan 5 Kurir WhatsApp */}
+                <div className="rounded-2xl border border-sky-200 bg-sky-50/70 p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sky-900 text-xs flex items-center gap-1.5">
+                      <span>🛵</span>
+                      <span>Penugasan Kurir Pengantar (WhatsApp):</span>
+                    </span>
+                    <span className="text-[10px] font-bold text-sky-700 bg-white border border-sky-200 px-2 py-0.5 rounded-full">
+                      5 Nomor Tersedia
+                    </span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <select
+                      value={selectedCouriers[selectedOrderDetail.id] || "k1"}
+                      onChange={(e) =>
+                        setSelectedCouriers({
+                          ...selectedCouriers,
+                          [selectedOrderDetail.id]: e.target.value,
+                        })
+                      }
+                      className="w-full text-xs font-semibold bg-white border border-sky-300 rounded-xl p-2 text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                    >
+                      {DIENG_COURIERS.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.phone}) - {c.zone}
+                        </option>
+                      ))}
+                    </select>
+                    <a
+                      href={getAssignCourierWhatsAppUrl(
+                        selectedOrderDetail,
+                        DIENG_COURIERS.find(
+                          (c) => c.id === (selectedCouriers[selectedOrderDetail.id] || "k1")
+                        ) || DIENG_COURIERS[0]
+                      )}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2 rounded-xl text-xs inline-flex items-center justify-center gap-1.5 transition shadow-xs shrink-0"
+                    >
+                      <Flaticon name="whatsapp" variant="brands" className="text-xs" />
+                      <span>Kirim Tugas ke Kurir</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Action Footer */}
+              <div className="border-t border-slate-100 bg-slate-50 p-4 sm:p-6 flex flex-wrap items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2">
+                  {selectedOrderDetail.customer_phone && (
+                    <a
+                      href={getBuyerReceiptWhatsAppUrl(selectedOrderDetail)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs inline-flex items-center gap-1.5 transition shadow-xs"
+                      title="Kirim Struk Pembayaran Resmi ke WA Pembeli"
+                    >
+                      <Flaticon name="whatsapp" variant="brands" className="text-xs" />
+                      <span>Kirim Struk ke WA Pembeli</span>
+                    </a>
+                  )}
+
+                  <button
+                    onClick={() => printReceiptViaBrowser(selectedOrderDetail)}
+                    className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold px-3 py-2 rounded-xl text-xs inline-flex items-center gap-1.5 transition shadow-2xs"
+                    title="Cetak Struk Thermal"
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                    <span>Cetak Struk</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {selectedOrderDetail.payment_status !== "settlement" && (
+                    <button
+                      onClick={async () => {
+                        await handleConfirmCash(selectedOrderDetail.id);
+                        setSelectedOrderDetail({
+                          ...selectedOrderDetail,
+                          payment_status: "settlement",
+                        });
+                      }}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs inline-flex items-center gap-1.5 transition shadow-xs"
+                    >
+                      <Check className="h-3.5 w-3.5 stroke-[3]" />
+                      <span>ACC Pembayaran Lunas</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => setSelectedOrderDetail(null)}
+                    className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs transition"
+                  >
+                    Tutup
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </main>
