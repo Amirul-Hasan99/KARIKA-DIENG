@@ -33,6 +33,8 @@ export default function OrderTrackingPage() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [paymentProof, setPaymentProof] = useState<string | null>(null);
+  const [isUploadingProof, setIsUploadingProof] = useState(false);
+  const [proofUploadError, setProofUploadError] = useState("");
 
   // Load saved payment proof from localStorage
   useEffect(() => {
@@ -239,6 +241,54 @@ export default function OrderTrackingPage() {
     navigator.clipboard.writeText(order.order_number);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!order) return;
+    
+    setProofUploadError("");
+    setIsUploadingProof(true);
+
+    try {
+      if (paymentProof) {
+        const uploadRes = await fetch("/api/orders/upload-payment-proof", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: order.id,
+            paymentProof,
+          }),
+        });
+
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json();
+          throw new Error(errorData.error || "Gagal upload bukti");
+        }
+
+        const uploadData = await uploadRes.json();
+        setOrder((prev) =>
+          prev
+            ? {
+                ...prev,
+                payment_proof_url: uploadData.proofUrl,
+                payment_proof_uploaded_at: new Date().toISOString(),
+              }
+            : null
+        );
+      }
+
+      setTimeout(() => {
+        if (wa && wa !== "#") {
+          window.open(wa, "_blank");
+        }
+      }, 500);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Terjadi kesalahan saat upload";
+      setProofUploadError(msg);
+      console.error("Payment confirmation error:", err);
+    } finally {
+      setIsUploadingProof(false);
+    }
   };
 
   const minutes = Math.floor(timeLeft / 60);
@@ -856,19 +906,33 @@ Mohon segera di-ACC dan diproses kurir pengantarannya ya Admin. Terima kasih ban
 
                 {/* WhatsApp Confirmation */}
                 <div className="pt-2">
-                  <a
-                    href={wa}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#168a54] px-5 py-4 text-sm font-bold text-white hover:bg-[#137446] transition shadow-md shadow-emerald-700/20"
+                  {proofUploadError && (
+                    <div className="mb-3 rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800 flex items-start gap-2">
+                      <Flaticon name="exclamation" className="text-sm shrink-0 mt-0.5" />
+                      <span>{proofUploadError}</span>
+                    </div>
+                  )}
+                  <button
+                    onClick={handleConfirmPayment}
+                    disabled={isUploadingProof}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#168a54] px-5 py-4 text-sm font-bold text-white hover:bg-[#137446] transition shadow-md shadow-emerald-700/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Flaticon name="whatsapp" variant="brands" className="text-base" />
-                    <span>
-                      {paymentProof
-                        ? "Konfirmasi Pembayaran & Kirim Bukti ke Admin WhatsApp (0831-2204-6357)"
-                        : "Konfirmasi Pembayaran ke Admin WhatsApp (0831-2204-6357)"}
-                    </span>
-                  </a>
+                    {isUploadingProof ? (
+                      <>
+                        <Flaticon name="spinner" className="animate-spin text-base" />
+                        <span>Mengunggah & Mengirim...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Flaticon name="whatsapp" variant="brands" className="text-base" />
+                        <span>
+                          {paymentProof
+                            ? "Konfirmasi Pembayaran & Kirim Bukti ke Admin WhatsApp (0831-2204-6357)"
+                            : "Konfirmasi Pembayaran ke Admin WhatsApp (0831-2204-6357)"}
+                        </span>
+                      </>
+                    )}
+                  </button>
                   <p className="mt-2 text-center text-xs text-[#85857c]">
                     Admin toko akan langsung mengecek kesiapan paket dan mengabari kurir pengantar.
                   </p>

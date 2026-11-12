@@ -100,6 +100,8 @@ export interface Order {
   delivery_status?: 'pending' | 'assigned' | 'picked_up' | 'delivered' | 'failed_attempt';
   courier_id?: string;
   whatsapp_confirmation_sent_at?: string;
+  payment_proof_url?: string;
+  payment_proof_uploaded_at?: string;
 }
 
 export interface DiolehProduct {

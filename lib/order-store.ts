@@ -357,6 +357,8 @@ export async function updateOrderPayment(
         order_status: nextOrderStatus,
         payment_type: paymentType,
         midtrans_transaction_id: transactionId || "",
+        payment_proof_url: matchedOrder?.payment_proof_url || null,
+        payment_proof_uploaded_at: matchedOrder?.payment_proof_uploaded_at || null,
         updated_at: now,
       };
 

@@ -68,6 +68,7 @@ export default function AdminDashboardPage() {
   const [selectedOrderDetail, setSelectedOrderDetail] = useState<Order | null>(null);
   const [selectedCouriers, setSelectedCouriers] = useState<Record<string, string>>({});
   const [transactionStatusFilter, setTransactionStatusFilter] = useState<"all" | "settlement" | "failed">("all");
+  const [selectedOrderForProof, setSelectedOrderForProof] = useState<Order | null>(null);
 
   // Product modal & CRUD form state
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
@@ -1385,6 +1386,17 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas chat ini ya Kak. Sel
                                 <span>Detail</span>
                               </button>
 
+                              {order.payment_proof_url && (
+                                <button
+                                  onClick={() => setSelectedOrderForProof(order)}
+                                  className="flex items-center justify-center gap-1 rounded-xl border border-emerald-300 bg-emerald-50 p-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition"
+                                  title="Lihat Bukti Pembayaran"
+                                >
+                                  <Flaticon name="image" className="text-xs" />
+                                  <span>Bukti</span>
+                                </button>
+                              )}
+
                               <button
                                 onClick={() => printReceiptViaBrowser(order)}
                                 className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white p-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
@@ -2444,6 +2456,136 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas chat ini ya Kak. Sel
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL: Tampilkan Bukti Pembayaran (Payment Proof) */}
+        {selectedOrderForProof && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs"
+            onClick={() => setSelectedOrderForProof(null)}
+          >
+            <div
+              className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-white p-4 sm:p-6">
+                <div className="space-y-1">
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <Flaticon name="image" className="text-base text-emerald-600" />
+                    Bukti Pembayaran
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Order #{selectedOrderForProof.order_number}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedOrderForProof(null)}
+                  className="rounded-full border border-slate-200 bg-white p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition"
+                  title="Tutup"
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="overflow-y-auto p-4 sm:p-6 flex-1">
+                {selectedOrderForProof.payment_proof_url ? (
+                  <div className="space-y-4">
+                    <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/30 p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                          <Check className="h-4 w-4" />
+                        </div>
+                        <span className="text-sm font-bold text-emerald-900">
+                          Bukti Pembayaran Tersimpan
+                        </span>
+                      </div>
+                      <p className="text-xs text-emerald-800">
+                        Diupload pada:{" "}
+                        <strong>
+                          {selectedOrderForProof.payment_proof_uploaded_at
+                            ? new Date(selectedOrderForProof.payment_proof_uploaded_at).toLocaleString("id-ID")
+                            : "-"}
+                        </strong>
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                      <img
+                        src={selectedOrderForProof.payment_proof_url}
+                        alt="Bukti Pembayaran"
+                        className="w-full h-auto object-contain max-h-96"
+                      />
+                    </div>
+
+                    <div className="rounded-xl bg-slate-50 p-4 space-y-3">
+                      <div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Detail Pesanan
+                        </p>
+                        <div className="mt-2 space-y-1.5 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">No. Pesanan:</span>
+                            <span className="font-mono font-bold text-slate-900">
+                              {selectedOrderForProof.order_number}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Pembeli:</span>
+                            <span className="font-bold text-slate-900">
+                              {selectedOrderForProof.customer_name || "-"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Total Bayar:</span>
+                            <span className="font-bold text-emerald-600">
+                              {formatRupiah(selectedOrderForProof.total_amount)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Metode:</span>
+                            <span className="font-bold text-slate-900 uppercase">
+                              {selectedOrderForProof.payment_type || "QRIS"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Status:</span>
+                            <span className="font-bold text-emerald-700">
+                              {selectedOrderForProof.payment_status === "settlement" ? "Lunas" : "Menunggu"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <a
+                      href={selectedOrderForProof.payment_proof_url}
+                      download
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-3 text-sm font-bold text-white transition shadow-md"
+                    >
+                      <Download className="h-4 w-4" />
+                      <span>Unduh Bukti Pembayaran</span>
+                    </a>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-3">
+                      <AlertCircle className="h-8 w-8" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-800">
+                      Belum Ada Bukti Pembayaran
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1 max-w-xs">
+                      Pembeli belum mengunggah bukti transfer atau struk pembayaran untuk pesanan ini.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
