@@ -28,15 +28,20 @@ function initFirebaseAdmin() {
           privateKey,
         }),
       });
+      adminDb = getFirestore(adminApp);
+      adminAuth = getAuth(adminApp);
     } else {
-      adminApp = initializeApp({
-        projectId: projectId || "mie-gacoan-selforder",
-      });
+      // Without credentials, keep adminDb null so that serverless environments (Vercel)
+      // do not attempt Google Cloud Application Default Credentials (ADC) lookup.
+      adminApp = null;
+      adminDb = null;
+      adminAuth = null;
     }
-    adminDb = getFirestore(adminApp);
-    adminAuth = getAuth(adminApp);
   } catch (error) {
     console.warn("Firebase Admin initialized in local memory mode:", error);
+    adminApp = null;
+    adminDb = null;
+    adminAuth = null;
   }
 }
 

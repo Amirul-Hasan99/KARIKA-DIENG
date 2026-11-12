@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
 import { createSnapTransaction } from "@/lib/midtrans";
 import { Order, OrderItem } from "@/types";
 import { saveOrder } from "@/lib/order-store";
 import { generateOrderNumber } from "@/lib/utils";
+import { getAllKarikaProducts } from "@/lib/karika-products";
 
 const MAX_RADIUS_KM = 8;
 const MIN_ITEMS = 5;
@@ -49,18 +49,25 @@ export async function POST(req: NextRequest) {
     const distance = distanceKm(origin, coordinates);
     if (distance > MAX_RADIUS_KM) return NextResponse.json({ error: "Alamat berada di luar radius pengiriman 8 km dari Titik Nol Dieng." }, { status: 400 });
 
-    const snapshots = (!adminDb || process.env.DEMO_CHECKOUT === "true" || process.env.NODE_ENV !== "production")
-      ? await Promise.all(items.map(async (item: {productId:string}) => ({ id: item.productId, exists: true, data: () => demoProducts[item.productId], ...({} as object) })))
-      : await Promise.all(items.map((item: {productId: string}) => {
-          if (typeof item.productId !== "string" || !/^[\w-]{1,100}$/.test(item.productId)) throw new Error("Produk tidak valid.");
-          return adminDb!.collection("products").doc(item.productId).get();
-        }));
+    const catalogProducts = getAllKarikaProducts();
+    const catalogMap = new Map<string, { name: string; price: number; is_available: boolean }>(
+      catalogProducts.map((p) => [p.id, { name: p.name, price: p.price, is_available: p.is_available !== false }])
+    );
 
-    const orderItems: OrderItem[] = snapshots.map((snapshot: any, index: number) => {
-      const product = snapshot.data();
-      if (!snapshot.exists || product?.is_available !== true || !Number.isSafeInteger(product?.price) || product.price <= 0) throw new Error("Produk belum tersedia atau belum memiliki harga yang dikonfirmasi.");
-      const qty = items[index].qty as number;
-      return { menu_id: snapshot.id, name: String(product.name), price: product.price, qty, selected_modifiers: [], subtotal: product.price * qty };
+    const orderItems: OrderItem[] = items.map((item: { productId: string; qty: number }) => {
+      const product = catalogMap.get(item.productId) || demoProducts[item.productId];
+      if (!product || product.is_available !== true || !Number.isSafeInteger(product.price) || product.price <= 0) {
+        throw new Error("Produk belum tersedia atau belum memiliki harga yang dikonfirmasi.");
+      }
+      const qty = Number(item.qty);
+      return {
+        menu_id: item.productId,
+        name: String(product.name),
+        price: product.price,
+        qty,
+        selected_modifiers: [],
+        subtotal: product.price * qty,
+      };
     });
     const totalAmount = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
     const orderNumber = generateOrderNumber("DELIVERY");
