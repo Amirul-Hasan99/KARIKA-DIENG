@@ -1099,9 +1099,9 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas chat ini ya Kak. Sel
 
             {/* Orders Cards Grid */}
             {isLoading ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-64 rounded-2xl bg-white animate-pulse border border-slate-200" />
+              <div className="grid grid-rows-2 grid-flow-col auto-cols-[88vw] xs:auto-cols-[360px] sm:auto-cols-auto gap-3.5 sm:gap-4 overflow-x-auto admin-order-scroll pb-4 sm:pb-0 sm:grid-rows-none sm:grid-flow-row sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-72 rounded-2xl bg-white animate-pulse border border-slate-200" />
                 ))}
               </div>
             ) : kdsOrders.length === 0 ? (
@@ -1115,16 +1115,35 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas chat ini ya Kak. Sel
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {kdsOrders.map((order) => {
-                  const nextAction = getNextAction(order.order_status);
-                  const elapsedMinutes = getElapsedMinutes(order.created_at);
+              <>
+                {kdsOrders.length >= 2 && (
+                  <div className="flex sm:hidden items-center justify-between text-[11px] text-slate-500 mb-2.5 px-1">
+                    <span className="flex items-center gap-1 font-bold text-amber-800">
+                      <Package className="h-3.5 w-3.5 text-amber-600" />
+                      <span>{kdsOrders.length} Pesanan Antrean</span>
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200/70 px-2.5 py-0.5 rounded-full font-semibold shadow-2xs">
+                      <span>2 Card ke bawah • Geser ke kanan</span>
+                      <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </div>
+                )}
+                <div
+                  className={`gap-3.5 sm:gap-4 pb-4 sm:pb-0 overflow-x-auto admin-order-scroll sm:overflow-visible snap-x snap-mandatory sm:snap-none ${
+                    kdsOrders.length >= 2
+                      ? "grid grid-rows-2 grid-flow-col auto-cols-[88vw] xs:auto-cols-[360px] sm:auto-cols-auto sm:grid-rows-none sm:grid-flow-row sm:grid-cols-2 lg:grid-cols-3"
+                      : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                  }`}
+                >
+                  {kdsOrders.map((order) => {
+                    const nextAction = getNextAction(order.order_status);
+                    const elapsedMinutes = getElapsedMinutes(order.created_at);
 
-                  return (
-                    <div
-                      key={order.id}
-                      className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs hover:shadow-md transition"
-                    >
+                    return (
+                      <div
+                        key={order.id}
+                        className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-2xs hover:shadow-md transition snap-start h-full"
+                      >
                       <div>
                         {/* Card Header */}
                         <div className="flex items-start justify-between border-b border-slate-100 pb-3">
@@ -1377,6 +1396,26 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas chat ini ya Kak. Sel
                               </a>
                             )}
 
+                            {/* Tombol Bukti Pembayaran Struk Pembeli */}
+                            {order.payment_proof_url && (
+                              <button
+                                type="button"
+                                onClick={() => setSelectedOrderForProof(order)}
+                                className="w-full flex items-center justify-between gap-2 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 border-2 border-emerald-400 text-emerald-900 py-2 px-3 text-xs font-bold transition shadow-2xs group"
+                                title="Buka Foto Bukti Pembayaran / Struk Transfer Pembeli"
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-600 text-white">
+                                    <Flaticon name="picture" className="text-xs" />
+                                  </div>
+                                  <span className="truncate">Bukti Struk Transfer Pembeli</span>
+                                </div>
+                                <span className="rounded-lg bg-emerald-600 group-hover:bg-emerald-700 text-white px-2.5 py-0.5 text-[10px] font-black shrink-0 transition">
+                                  Buka Foto ↗
+                                </span>
+                              </button>
+                            )}
+
                             <div className="flex items-center gap-1.5 pt-0.5">
                               <button
                                 onClick={() => setSelectedOrderDetail(order)}
@@ -1430,11 +1469,12 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas chat ini ya Kak. Sel
                   );
                 })}
               </div>
-            )}
-          </div>
-        )}
+            </>
+          )}
+        </div>
+      )}
 
-        {/* View 3: All Settled Transactions with Expanded Date Filter & Excel/PDF Export */}
+      {/* View 3: All Settled Transactions with Expanded Date Filter & Excel/PDF Export */}
         {activeTab === "transactions" && (
           <div className="space-y-4">
             {/* Header & Filter Card */}
@@ -1616,113 +1656,155 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas chat ini ya Kak. Sel
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
-              <table className="w-full text-left text-xs text-slate-600">
-                <thead className="bg-slate-50 text-[11px] uppercase font-bold text-slate-700 border-b border-slate-200">
-                  <tr>
-                    <th className="px-4 py-3">No. Order</th>
-                    <th className="px-4 py-3">Waktu</th>
-                    <th className="px-4 py-3">Tujuan &amp; Titik Maps</th>
-                    <th className="px-4 py-3">Pemesan &amp; WhatsApp</th>
-                    <th className="px-4 py-3">Status Bayar</th>
-                    <th className="px-4 py-3">Item Pesanan</th>
-                    <th className="px-4 py-3">Total Nominal</th>
-                    <th className="px-4 py-3">Status Antar</th>
-                    <th className="px-4 py-3 text-right">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredTransactions.length === 0 ? (
+              {/* Petunjuk Geser Horizontal untuk Kenyamanan Admin */}
+              <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-50/90 via-slate-50 to-white border-b border-slate-200 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-xs shadow-2xs">
+                    ⇄
+                  </span>
+                  <span className="font-bold text-slate-800">
+                    Tabel Responsif: Geser ke kanan (scroll horizontal) untuk melihat seluruh kolom data transaksi &amp; tombol aksi.
+                  </span>
+                </div>
+                <span className="text-[11px] font-bold text-amber-900 bg-amber-100 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                  Total {filteredTransactions.length} Transaksi
+                </span>
+              </div>
+
+              {/* Scrollable Container dengan Min-Width */}
+              <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-amber-300 scrollbar-track-slate-100 pb-2">
+                <table className="w-full text-left text-xs text-slate-600 min-w-[1150px]">
+                  <thead className="bg-slate-50 text-[11px] uppercase font-bold text-slate-700 border-b border-slate-200">
                     <tr>
-                      <td colSpan={9} className="py-8 text-center text-slate-400">
-                        Tidak ada transaksi pada filter ini
-                      </td>
+                      <th className="px-4 py-3 whitespace-nowrap">No. Order</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Waktu</th>
+                      <th className="px-4 py-3 min-w-[200px]">Tujuan &amp; Titik Maps</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Pemesan &amp; WhatsApp</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Status Bayar &amp; Bukti</th>
+                      <th className="px-4 py-3 min-w-[180px]">Item Pesanan</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Total Nominal</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Status Antar</th>
+                      <th className="px-4 py-3 text-right whitespace-nowrap">Aksi</th>
                     </tr>
-                  ) : (
-                    filteredTransactions.map((order) => (
-                      <tr key={order.id} className="hover:bg-slate-50/80 transition">
-                        <td className="px-4 py-3 font-mono font-bold text-slate-900">
-                          {order.order_number}
-                        </td>
-                        <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
-                          {formatOrderTime(order.created_at)}
-                        </td>
-                        <td className="px-4 py-3 max-w-xs">
-                          <p className="font-semibold text-slate-900 text-xs">
-                            {order.delivery_address || `Pengantaran Dieng (Radius 8 km)`}
-                          </p>
-                          {order.coordinates ? (
-                            <a
-                              href={`https://www.google.com/maps/dir/?api=1&destination=${order.coordinates.lat},${order.coordinates.lng}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-[10px] text-amber-700 hover:underline font-bold inline-flex items-center gap-0.5 mt-0.5"
-                            >
-                              <span>Buka Maps ({order.coordinates.lat.toFixed(4)}, {order.coordinates.lng.toFixed(4)})</span>
-                              <ExternalLink className="h-2.5 w-2.5" />
-                            </a>
-                          ) : (
-                            <span className="text-[10px] text-slate-400">Titik Kawasan Dieng</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-slate-800">
-                          <span className="font-semibold block">{order.customer_name || "-"}</span>
-                          {order.customer_phone && (
-                            <span className="text-[11px] text-slate-500 font-mono">
-                              {order.customer_phone}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
-                              order.payment_status === "settlement"
-                                ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                                : order.payment_status === "failed"
-                                ? "bg-rose-100 text-rose-800 border border-rose-200"
-                                : "bg-amber-100 text-amber-800 border border-amber-200"
-                            }`}
-                          >
-                            {order.payment_status === "settlement"
-                              ? "Lunas"
-                              : order.payment_status === "failed"
-                              ? "Dibatalkan"
-                              : "Pending"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-slate-700 max-w-xs truncate">
-                          {order.items.map((i) => `${i.qty}x ${i.name}`).join(", ")}
-                        </td>
-                        <td className="px-4 py-3 font-black text-amber-600">
-                          {formatRupiah(order.total_amount)}
-                        </td>
-                        <td className="px-4 py-3">
-                          {getStatusBadge(order.order_status)}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {order.payment_status === "failed" ? (
-                              <button
-                                onClick={() => handleRestoreOrder(order.id)}
-                                className="inline-flex items-center gap-1 rounded-lg bg-slate-900 text-white px-2 py-1 text-[10px] font-bold hover:bg-black transition"
-                                title="Pulihkan pesanan yang dibatalkan"
-                              >
-                                <span>Pulihkan</span>
-                              </button>
-                            ) : null}
-                            <button
-                              onClick={() => printReceiptViaBrowser(order)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition"
-                            >
-                              <Printer className="h-3 w-3" />
-                              <span>Struk</span>
-                            </button>
-                          </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredTransactions.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="py-8 text-center text-slate-400">
+                          Tidak ada transaksi pada filter ini
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      filteredTransactions.map((order) => (
+                        <tr key={order.id} className="hover:bg-slate-50/80 transition">
+                          <td className="px-4 py-3 font-mono font-bold text-slate-900 whitespace-nowrap">
+                            {order.order_number}
+                          </td>
+                          <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
+                            {formatOrderTime(order.created_at)}
+                          </td>
+                          <td className="px-4 py-3 max-w-xs">
+                            <p className="font-semibold text-slate-900 text-xs">
+                              {order.delivery_address || `Pengantaran Dieng (Radius 8 km)`}
+                            </p>
+                            {order.coordinates ? (
+                              <a
+                                href={`https://www.google.com/maps/dir/?api=1&destination=${order.coordinates.lat},${order.coordinates.lng}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] text-amber-700 hover:underline font-bold inline-flex items-center gap-0.5 mt-0.5"
+                              >
+                                <span>Buka Maps ({order.coordinates.lat.toFixed(4)}, {order.coordinates.lng.toFixed(4)})</span>
+                                <ExternalLink className="h-2.5 w-2.5" />
+                              </a>
+                            ) : (
+                              <span className="text-[10px] text-slate-400">Titik Kawasan Dieng</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-slate-800 whitespace-nowrap">
+                            <span className="font-semibold block">{order.customer_name || "-"}</span>
+                            {order.customer_phone && (
+                              <span className="text-[11px] text-slate-500 font-mono">
+                                {order.customer_phone}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <div className="space-y-1">
+                              <span
+                                className={`inline-block rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                  order.payment_status === "settlement"
+                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                    : order.payment_status === "failed"
+                                    ? "bg-rose-100 text-rose-800 border border-rose-200"
+                                    : "bg-amber-100 text-amber-800 border border-amber-200"
+                                }`}
+                              >
+                                {order.payment_status === "settlement"
+                                  ? "Lunas"
+                                  : order.payment_status === "failed"
+                                  ? "Dibatalkan"
+                                  : "Pending"}
+                              </span>
+                              {order.payment_proof_url && (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedOrderForProof(order)}
+                                  className="flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded px-1.5 py-0.5 transition cursor-pointer"
+                                  title="Lihat foto bukti struk pembayaran pembeli"
+                                >
+                                  <Flaticon name="picture" className="text-[10px] text-emerald-600" />
+                                  <span>Lihat Bukti ↗</span>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-slate-700 max-w-xs truncate">
+                            {order.items.map((i) => `${i.qty}x ${i.name}`).join(", ")}
+                          </td>
+                          <td className="px-4 py-3 font-black text-amber-600 whitespace-nowrap">
+                            {formatRupiah(order.total_amount)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {getStatusBadge(order.order_status)}
+                          </td>
+                          <td className="px-4 py-3 text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {order.payment_proof_url && (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedOrderForProof(order)}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 text-[11px] font-bold text-emerald-800 transition cursor-pointer"
+                                  title="Buka Foto Bukti Struk Pembayaran"
+                                >
+                                  <Flaticon name="picture" className="h-3 w-3 text-emerald-600" />
+                                  <span>Bukti</span>
+                                </button>
+                              )}
+                              {order.payment_status === "failed" ? (
+                                <button
+                                  onClick={() => handleRestoreOrder(order.id)}
+                                  className="inline-flex items-center gap-1 rounded-lg bg-slate-900 text-white px-2 py-1 text-[10px] font-bold hover:bg-black transition"
+                                  title="Pulihkan pesanan yang dibatalkan"
+                                >
+                                  <span>Pulihkan</span>
+                                </button>
+                              ) : null}
+                              <button
+                                onClick={() => printReceiptViaBrowser(order)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition"
+                              >
+                                <Printer className="h-3 w-3" />
+                                <span>Struk</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}

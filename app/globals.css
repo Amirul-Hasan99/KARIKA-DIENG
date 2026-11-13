@@ -60,3 +60,29 @@
 .ticket-urgent {
   animation: urgent-pulse 2s infinite ease-in-out;
 }
+
+/* Custom horizontal scroll for mobile admin order cards */
+.admin-order-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 158, 11, 0.4) transparent;
+}
+
+.admin-order-scroll::-webkit-scrollbar {
+  height: 5px;
+}
+
+.admin-order-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 9999px;
+}
+
+.admin-order-scroll::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.4);
+  border-radius: 9999px;
+}
+
+.admin-order-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.7);
+}

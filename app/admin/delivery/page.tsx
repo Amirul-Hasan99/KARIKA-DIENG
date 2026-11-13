@@ -105,7 +105,7 @@ export default function AdminDeliveryPage() {
           </p>
         )}
 
-        <div className="mt-6 space-y-4">
+        <div className="mt-6">
           {loading ? (
             <p className="rounded-2xl border border-[#e8e6df] bg-white p-6 text-sm text-[#77766f]">
               Memuat daftar pesanan…
@@ -115,11 +115,31 @@ export default function AdminDeliveryPage() {
               Belum ada pesanan masuk.
             </p>
           ) : (
-            orders.map((order) => (
-              <article
-                key={order.id}
-                className="rounded-3xl border border-[#e8e6df] bg-white p-5 sm:p-6 shadow-xs space-y-4"
+            <>
+              {orders.length >= 2 && (
+                <div className="flex sm:hidden items-center justify-between text-[11px] text-slate-500 mb-2.5 px-1">
+                  <span className="flex items-center gap-1 font-bold text-[#857200]">
+                    <Flaticon name="truck-side" className="text-xs" />
+                    <span>{orders.length} Pesanan Pengantaran</span>
+                  </span>
+                  <span className="flex items-center gap-1 text-[10px] text-[#857200] bg-[#faf8ed] border border-[#ecd983] px-2.5 py-0.5 rounded-full font-semibold shadow-2xs">
+                    <span>2 Card ke bawah • Geser ke kanan</span>
+                    <Flaticon name="arrow-right" className="text-[10px]" />
+                  </span>
+                </div>
+              )}
+              <div
+                className={`gap-3.5 sm:gap-4 pb-4 sm:pb-0 overflow-x-auto admin-order-scroll sm:overflow-visible snap-x snap-mandatory sm:snap-none ${
+                  orders.length >= 2
+                    ? "grid grid-rows-2 grid-flow-col auto-cols-[88vw] xs:auto-cols-[360px] sm:auto-cols-auto sm:grid-rows-none sm:grid-flow-row sm:grid-cols-2 lg:grid-cols-3"
+                    : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                }`}
               >
+                {orders.map((order) => (
+                  <article
+                    key={order.id}
+                    className="rounded-3xl border border-[#e8e6df] bg-white p-4 sm:p-6 shadow-xs space-y-4 snap-start flex flex-col justify-between h-full"
+                  >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <span className="font-mono text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
@@ -212,7 +232,9 @@ export default function AdminDeliveryPage() {
                   </div>
                 </div>
               </article>
-            ))
+            ))}
+            </div>
+          </>
           )}
         </div>
       </div>

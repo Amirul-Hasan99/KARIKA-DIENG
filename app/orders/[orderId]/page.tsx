@@ -35,6 +35,8 @@ export default function OrderTrackingPage() {
   const [paymentProof, setPaymentProof] = useState<string | null>(null);
   const [isUploadingProof, setIsUploadingProof] = useState(false);
   const [proofUploadError, setProofUploadError] = useState("");
+  const [uploadSuccessMsg, setUploadSuccessMsg] = useState("");
+  const [previewProofModalOpen, setPreviewProofModalOpen] = useState(false);
 
   // Load saved payment proof from localStorage
   useEffect(() => {
@@ -47,6 +49,51 @@ export default function OrderTrackingPage() {
     } catch {}
   }, [orderId]);
 
+  // Upload proof to backend server & admin store
+  const uploadProofFile = async (dataUrl: string, currentOrder?: Order | null) => {
+    const targetOrder = currentOrder || order;
+    if (!targetOrder) return;
+    setIsUploadingProof(true);
+    setProofUploadError("");
+    try {
+      const uploadRes = await fetch("/api/orders/upload-payment-proof", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: targetOrder.id,
+          paymentProof: dataUrl,
+        }),
+      });
+
+      if (!uploadRes.ok) {
+        const errorData = await uploadRes.json();
+        throw new Error(errorData.error || "Gagal mengunggah bukti");
+      }
+
+      const uploadData = await uploadRes.json();
+      const updatedUrl = uploadData.proofUrl || dataUrl;
+
+      setOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              payment_proof_url: updatedUrl,
+              payment_proof_uploaded_at: new Date().toISOString(),
+            }
+          : null
+      );
+      setPaymentProof(updatedUrl);
+      setUploadSuccessMsg("✓ Bukti struk transfer berhasil tersimpan dan diteruskan ke Admin!");
+      setTimeout(() => setUploadSuccessMsg(""), 5000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Terjadi kesalahan saat upload bukti";
+      setProofUploadError(msg);
+      console.error("Payment proof upload error:", err);
+    } finally {
+      setIsUploadingProof(false);
+    }
+  };
+
   const handleFileProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -57,12 +104,14 @@ export default function OrderTrackingPage() {
     }
 
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       const result = reader.result as string;
       setPaymentProof(result);
       try {
         localStorage.setItem(`karika_proof_${orderId}`, result);
       } catch {}
+      // Otomatis kirim ke backend saat file dipilih
+      await uploadProofFile(result);
     };
     reader.readAsDataURL(file);
   };
@@ -79,6 +128,9 @@ export default function OrderTrackingPage() {
         if (!r.ok) throw new Error(d.error || "Pesanan tidak ditemukan.");
         if (active) {
           setOrder(d.order);
+          if (d.order.payment_proof_url && !paymentProof) {
+            setPaymentProof(d.order.payment_proof_url);
+          }
           // Sync with localStorage so catalog page shows active order tracking
           try {
             const activeOrderInfo = {
@@ -904,6 +956,132 @@ Mohon segera di-ACC dan diproses kurir pengantarannya ya Admin. Terima kasih ban
                   </div>
                 </div>
 
+                {/* FORM UPLOAD BUKTI STRUK TRANSFER / PEMBAYARAN PEMBELI */}
+                <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-gradient-to-br from-[#fdfbf3] via-amber-50/40 to-white p-4 sm:p-5 text-left space-y-3.5 shadow-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-100 pb-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#292a23] to-[#454639] text-[#f4ce00] shadow-2xs">
+                        <Flaticon name="camera" className="text-sm" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-bold text-[#24251f]">
+                          Form Upload Bukti Struk Transfer Pembeli
+                        </h4>
+                        <p className="text-[11px] text-[#7a7457]">
+                          Unggah foto/screenshot bukti pembayaran untuk verifikasi kilat admin Dioleh - oleh Dieng
+                        </p>
+                      </div>
+                    </div>
+
+                    {(order.payment_proof_url || paymentProof) && (
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-3 py-1 rounded-full shadow-2xs">
+                        <Flaticon name="check-circle" variant="sr" className="text-xs text-emerald-600" />
+                        <span>Struk Tersimpan di Sistem</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {uploadSuccessMsg && (
+                    <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-2.5 text-xs text-emerald-800 font-semibold flex items-center gap-2">
+                      <Flaticon name="check-circle" variant="sr" className="text-xs text-emerald-600" />
+                      <span>{uploadSuccessMsg}</span>
+                    </div>
+                  )}
+
+                  {proofUploadError && (
+                    <div className="rounded-xl bg-rose-50 border border-rose-200 p-2.5 text-xs text-rose-800 font-semibold flex items-center gap-2">
+                      <Flaticon name="exclamation" className="text-xs text-rose-600" />
+                      <span>{proofUploadError}</span>
+                    </div>
+                  )}
+
+                  {/* Jika Struk Sudah Ada (Preview & Opsi Ganti) */}
+                  {(order.payment_proof_url || paymentProof) ? (
+                    <div className="space-y-3">
+                      <div className="relative rounded-2xl overflow-hidden border border-amber-200 bg-white p-3 shadow-2xs max-w-sm mx-auto">
+                        <div className="relative group cursor-pointer" onClick={() => setPreviewProofModalOpen(true)}>
+                          <img
+                            src={order.payment_proof_url || paymentProof!}
+                            alt="Preview Struk Transfer"
+                            className="w-full max-h-56 object-contain rounded-xl bg-slate-50 border border-slate-100"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition rounded-xl flex items-center justify-center text-white text-xs font-bold gap-1.5">
+                            <Flaticon name="eye" className="text-sm" />
+                            <span>Klik untuk Perbesar</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-2.5 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 pt-2">
+                          <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                            <Flaticon name="check-circle" variant="sr" className="text-xs" />
+                            <span>Terkirim ke Admin Toko</span>
+                          </span>
+                          <span className="font-mono text-[10px] text-slate-400">
+                            {order.payment_proof_uploaded_at
+                              ? new Date(order.payment_proof_uploaded_at).toLocaleString("id-ID", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "Baru saja diunggah"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-center gap-2">
+                        <label className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-amber-300 bg-white hover:bg-amber-50 py-2 px-3.5 text-xs font-bold text-amber-950 transition shadow-2xs">
+                          <Flaticon name="camera" className="text-xs text-amber-700" />
+                          <span>{isUploadingProof ? "Mengunggah..." : "Ganti Foto Struk"}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            disabled={isUploadingProof}
+                            onChange={handleFileProofChange}
+                            className="hidden"
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={() => setPreviewProofModalOpen(true)}
+                          className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 py-2 px-3.5 text-xs font-bold text-slate-700 transition shadow-2xs"
+                        >
+                          <Flaticon name="eye" className="text-xs text-slate-500" />
+                          <span>Lihat Foto Penuh</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Jika Belum Ada Struk (Form Pilih File) */
+                    <div className="space-y-2">
+                      <label className="cursor-pointer flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-amber-300 bg-white hover:bg-amber-50/60 py-6 px-4 text-center transition group">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 group-hover:scale-105 transition text-amber-800 shadow-2xs">
+                          <Flaticon name="camera" className="text-xl" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-[#24251f]">
+                            {isUploadingProof ? "Sedang Mengunggah Bukti Struk..." : "Klik untuk Pilih Foto / Screenshot Struk Transfer"}
+                          </p>
+                          <p className="text-[11px] text-[#7a7457] mt-0.5">
+                            Mendukung kamera HP, screenshot mobile banking, QRIS, atau slip ATM (JPG, PNG, WEBP)
+                          </p>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={isUploadingProof}
+                          onChange={handleFileProofChange}
+                          className="hidden"
+                        />
+                      </label>
+                      <p className="text-[11px] text-center text-slate-400">
+                        Setelah dipilih, foto struk otomatis tersimpan ke pesanan dan diteruskan ke kartu order admin.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 {/* WhatsApp Confirmation */}
                 <div className="pt-2">
                   {proofUploadError && (
@@ -967,6 +1145,54 @@ Mohon segera di-ACC dan diproses kurir pengantarannya ya Admin. Terima kasih ban
             <p className="text-center text-xs text-[#85857c]">
               Halaman ini memeriksa pembaruan status secara otomatis. Anda juga dapat memantau status pesanan kapan saja langsung dari halaman katalog.
             </p>
+          </div>
+        )}
+
+        {/* MODAL PREVIEW FOTO STRUK PEMBELI */}
+        {previewProofModalOpen && (order?.payment_proof_url || paymentProof) && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs"
+            onClick={() => setPreviewProofModalOpen(false)}
+          >
+            <div
+              className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 p-4 bg-slate-50">
+                <div className="flex items-center gap-2">
+                  <Flaticon name="picture" className="text-sm text-emerald-600" />
+                  <h3 className="text-sm font-bold text-slate-800">Bukti Struk Transfer Pembeli</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewProofModalOpen(false)}
+                  className="rounded-full p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition"
+                >
+                  <Flaticon name="cross" className="text-xs" />
+                </button>
+              </div>
+
+              <div className="p-4 overflow-y-auto flex-1 flex items-center justify-center bg-slate-900/5">
+                <img
+                  src={order?.payment_proof_url || paymentProof!}
+                  alt="Struk Transfer Penuh"
+                  className="max-w-full max-h-[70vh] object-contain rounded-xl shadow-xs"
+                />
+              </div>
+
+              <div className="p-3 border-t border-slate-100 bg-white flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-mono text-[11px]">
+                  Order: #{order?.order_number}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPreviewProofModalOpen(false)}
+                  className="rounded-xl bg-slate-900 text-white font-bold px-4 py-2 hover:bg-black transition"
+                >
+                  Tutup
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

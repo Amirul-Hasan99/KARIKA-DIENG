@@ -346,7 +346,7 @@ export default function KitchenDashboardPage() {
       {/* Main Order Grid */}
       <main className="p-4 sm:p-6">
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-rows-2 grid-flow-col auto-cols-[88vw] xs:auto-cols-[360px] sm:auto-cols-auto gap-3.5 sm:gap-4 overflow-x-auto admin-order-scroll pb-4 sm:pb-0 sm:grid-rows-none sm:grid-flow-row sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:overflow-visible">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
@@ -367,31 +367,50 @@ export default function KitchenDashboardPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredOrders.map((order) => {
-              const nextAction = getNextStatus(order.order_status);
-              const isNew = order.order_status === "received";
-              const elapsedMinutes = getElapsedMinutes(order.created_at);
+          <>
+            {filteredOrders.length >= 2 && (
+              <div className="flex sm:hidden items-center justify-between text-[11px] text-slate-500 mb-2.5 px-1">
+                <span className="flex items-center gap-1 font-bold text-amber-800">
+                  <Flaticon name="restaurant" className="text-xs" />
+                  <span>{filteredOrders.length} Tiket Pesanan</span>
+                </span>
+                <span className="flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200/70 px-2.5 py-0.5 rounded-full font-semibold shadow-2xs">
+                  <span>2 Card ke bawah • Geser ke kanan</span>
+                  <Flaticon name="arrow-right" className="text-[10px]" />
+                </span>
+              </div>
+            )}
+            <div
+              className={`gap-3.5 sm:gap-4 pb-4 sm:pb-0 overflow-x-auto admin-order-scroll sm:overflow-visible snap-x snap-mandatory sm:snap-none ${
+                filteredOrders.length >= 2
+                  ? "grid grid-rows-2 grid-flow-col auto-cols-[88vw] xs:auto-cols-[360px] sm:auto-cols-auto sm:grid-rows-none sm:grid-flow-row sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                  : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              }`}
+            >
+              {filteredOrders.map((order) => {
+                const nextAction = getNextStatus(order.order_status);
+                const isNew = order.order_status === "received";
+                const elapsedMinutes = getElapsedMinutes(order.created_at);
 
-              // Elapsed time color
-              const elapsedBadgeClass =
-                elapsedMinutes < 5
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                  : elapsedMinutes < 15
-                  ? "bg-amber-50 text-amber-700 border-amber-200"
-                  : "bg-rose-50 text-rose-700 border-rose-300 font-bold animate-pulse";
+                // Elapsed time color
+                const elapsedBadgeClass =
+                  elapsedMinutes < 5
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : elapsedMinutes < 15
+                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                    : "bg-rose-50 text-rose-700 border-rose-300 font-bold animate-pulse";
 
-              return (
-                <div
-                  key={order.id}
-                  className={`flex flex-col rounded-2xl border bg-white p-4 shadow-sm transition-all ${
-                    isNew
-                      ? "border-amber-400 ring-2 ring-amber-400/20 ticket-urgent"
-                      : order.order_status === "cooking"
-                      ? "border-sky-300"
-                      : "border-slate-200"
-                  }`}
-                >
+                return (
+                  <div
+                    key={order.id}
+                    className={`flex flex-col justify-between rounded-2xl border bg-white p-3.5 sm:p-4 shadow-sm transition-all snap-start h-full ${
+                      isNew
+                        ? "border-amber-400 ring-2 ring-amber-400/20 ticket-urgent"
+                        : order.order_status === "cooking"
+                        ? "border-sky-300"
+                        : "border-slate-200"
+                    }`}
+                  >
                   {/* Ticket Header */}
                   <div className="flex items-start justify-between border-b border-slate-100 pb-3">
                     <div>
@@ -528,7 +547,8 @@ export default function KitchenDashboardPage() {
                 </div>
               );
             })}
-          </div>
+            </div>
+          </>
         )}
       </main>
     </div>

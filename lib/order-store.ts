@@ -639,6 +639,88 @@ export async function cancelOrder(orderId: string, reason: string = "Dibatalkan"
   return updated;
 }
 
+export async function updateOrderPaymentProof(
+  orderIdOrNumber: string,
+  proofUrl: string
+): Promise<Order | null> {
+  let matchedOrder: Order | null = null;
+  let targetId = orderIdOrNumber;
+
+  // 1. Check in-memory store
+  if (ordersStore.has(orderIdOrNumber)) {
+    matchedOrder = ordersStore.get(orderIdOrNumber)!;
+    targetId = matchedOrder.id;
+  } else {
+    for (const [id, order] of ordersStore.entries()) {
+      if (order.order_number === orderIdOrNumber || order.id === orderIdOrNumber) {
+        matchedOrder = order;
+        targetId = id;
+        break;
+      }
+    }
+  }
+
+  // 2. Check disk file
+  if (!matchedOrder) {
+    const diskOrders = loadOrdersFromFile();
+    const diskMatch = diskOrders.find((o) => o.id === orderIdOrNumber || o.order_number === orderIdOrNumber);
+    if (diskMatch) {
+      matchedOrder = diskMatch;
+      targetId = diskMatch.id;
+    }
+  }
+
+  // 3. Fallback to getOrderById
+  if (!matchedOrder) {
+    matchedOrder = await getOrderById(orderIdOrNumber);
+    if (matchedOrder) targetId = matchedOrder.id;
+  }
+
+  if (!matchedOrder) return null;
+
+  const now = new Date().toISOString();
+  const updated: Order = {
+    ...matchedOrder,
+    payment_proof_url: proofUrl,
+    payment_proof_uploaded_at: now,
+    updated_at: now,
+  };
+
+  ordersStore.set(targetId, updated);
+  persistOrderToDisk(updated);
+
+  // Update in Neon PostgreSQL if available
+  try {
+    const sql = getNeonSql();
+    if (sql && (global as any).__neonReachable !== false) {
+      await sql`
+        UPDATE orders 
+        SET payment_proof_url = ${proofUrl},
+            payment_proof_uploaded_at = ${now},
+            updated_at = ${now}
+        WHERE id = ${targetId} OR order_number = ${orderIdOrNumber}
+      `;
+    }
+  } catch (err) {
+    console.warn("[order-store] Neon update payment proof error:", err);
+  }
+
+  // Update in Firestore if available
+  try {
+    if (hasFirestoreCredentials()) {
+      await adminDb!.collection("orders").doc(targetId).update({
+        payment_proof_url: proofUrl,
+        payment_proof_uploaded_at: now,
+        updated_at: now,
+      });
+    }
+  } catch (err) {
+    console.warn("[order-store] Firestore update payment proof error:", err);
+  }
+
+  return updated;
+}
+
 export function getMenuStockMap(): Record<string, boolean> {
   const result: Record<string, boolean> = {};
   if (global.__globalMenuStock) {

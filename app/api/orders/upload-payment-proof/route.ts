@@ -1,7 +1,7 @@
 "use server";
 
 import { NextResponse } from "next/server";
-import { getOrderById, updateOrderPayment } from "@/lib/order-store";
+import { getOrderById, updateOrderPaymentProof } from "@/lib/order-store";
 import fs from "fs";
 import path from "path";
 
@@ -32,47 +32,58 @@ export async function POST(req: Request) {
       );
     }
 
-    const uploadsDir = path.join(process.cwd(), "public", "uploads", "payment-proof");
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
+    let finalProofUrl = paymentProof;
+
+    // Coba simpan file ke filesystem jika memungkinkan
+    try {
+      const uploadsDir = path.join(process.cwd(), "public", "uploads", "payment-proof");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      const base64Data = paymentProof.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(base64Data, "base64");
+
+      const ext = paymentProof.includes("png")
+        ? "png"
+        : paymentProof.includes("webp")
+        ? "webp"
+        : "jpg";
+
+      const safeId = String(order.order_number || orderId).replace(/[^a-zA-Z0-9_-]/g, "_");
+      const fileName = `${safeId}-${Date.now()}.${ext}`;
+      const filePath = path.join(uploadsDir, fileName);
+
+      fs.writeFileSync(filePath, buffer);
+      
+      // Jika ukuran base64 di bawah 1MB, simpan Data URL langsung agar tahan banting di Vercel Serverless
+      // Jika di atas 1MB, gunakan path file /uploads/payment-proof/
+      if (paymentProof.length < 1200000) {
+        finalProofUrl = paymentProof;
+      } else {
+        finalProofUrl = `/uploads/payment-proof/${fileName}`;
+      }
+    } catch (fsErr) {
+      console.warn("[upload-payment-proof] Disk write warning (falling back to Data URL):", fsErr);
+      finalProofUrl = paymentProof;
     }
 
-    const base64Data = paymentProof.replace(/^data:image\/\w+;base64,/, "");
-    const buffer = Buffer.from(base64Data, "base64");
-
-    const ext = paymentProof.includes("png")
-      ? "png"
-      : paymentProof.includes("webp")
-      ? "webp"
-      : "jpg";
-
-    const fileName = `${orderId}-${Date.now()}.${ext}`;
-    const filePath = path.join(uploadsDir, fileName);
-
-    fs.writeFileSync(filePath, buffer);
-
-    const proofUrl = `/uploads/payment-proof/${fileName}`;
-    const now = new Date().toISOString();
-
-    const updatedOrder = {
-      ...order,
-      payment_proof_url: proofUrl,
-      payment_proof_uploaded_at: now,
-      updated_at: now,
-    };
-
-    await updateOrderPayment(orderId, order.payment_status, order.payment_type || "qris");
+    const updated = await updateOrderPaymentProof(order.id, finalProofUrl);
 
     return NextResponse.json({
       success: true,
-      message: "Bukti pembayaran berhasil disimpan",
-      proofUrl,
-      order: updatedOrder,
+      message: "Bukti pembayaran berhasil disimpan ke sistem pesanan",
+      proofUrl: finalProofUrl,
+      order: updated || {
+        ...order,
+        payment_proof_url: finalProofUrl,
+        payment_proof_uploaded_at: new Date().toISOString(),
+      },
     });
   } catch (err) {
     console.error("[upload-payment-proof] Error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Gagal menyimpan bukti" },
+      { error: err instanceof Error ? err.message : "Gagal menyimpan bukti pembayaran" },
       { status: 500 }
     );
   }
