@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
     // Reset rate limit on success
     await resetRateLimit(ip);
 
+    const now = Date.now();
     const payload = Buffer.from(JSON.stringify({ sub: username, exp: Math.floor(now / 1000) + MAX_AGE_SECONDS })).toString("base64url");
     const signature = createHmac("sha256", key).update(payload).digest("base64url");
     const response = NextResponse.json({ success: true });
