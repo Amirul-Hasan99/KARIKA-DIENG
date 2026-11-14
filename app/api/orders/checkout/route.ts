@@ -28,6 +28,7 @@ const distanceKm = (a: {lat:number;lng:number}, b: {lat:number;lng:number}) => {
 export async function POST(req: NextRequest) {
   try {
     // Validate request inputs safely
+    const body = await req.json();
     const { customerName, customerPhone, address, coordinates, items, paymentType } = body;
     
     // Strict Input Validation
