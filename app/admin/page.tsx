@@ -382,6 +382,36 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas chat ini ya Kak. Sel
     }
   };
 
+  // Permanent Delete Order
+  const handlePermanentDelete = async (orderId: string) => {
+    if (!confirm("⚠️ PERINGATAN! Anda akan menghapus pesanan ini secara PERMANEN dari SEMUA database (lokal, Neon, Firestore).\n\nTindakan ini TIDAK DAPAT DIBATALKAN dan data akan hilang selamanya.\n\nLanjutkan?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/admin/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: orderId, action: "delete" }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Gagal menghapus pesanan.");
+      }
+
+      // Refresh data
+      fetchOrders();
+      // Tutup modal jika sedang terbuka
+      setSelectedOrderDetail(null);
+      alert("Pesanan berhasil dihapus secara permanen.");
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      alert("Gagal menghapus pesanan. Silakan coba lagi.");
+    }
+  };
+
   // Product CRUD Form Handlers
   const handleOpenAddProduct = () => {
     setEditingProduct(null);
@@ -1313,6 +1343,13 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas chat ini ya Kak. Sel
                               >
                                 <span>Detail</span>
                               </button>
+                              <button
+                                onClick={() => handlePermanentDelete(order.id)}
+                                className="flex items-center justify-center gap-1 rounded-xl border border-rose-200 bg-rose-50 p-2 text-xs font-bold text-rose-600 hover:bg-rose-100 transition shadow-2xs"
+                                title="Hapus Permanen"
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </button>
                             </div>
                           </div>
                         ) : (
@@ -1793,9 +1830,17 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas chat ini ya Kak. Sel
                               <button
                                 onClick={() => printReceiptViaBrowser(order)}
                                 className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition"
+                                title="Cetak Struk"
                               >
                                 <Printer className="h-3 w-3" />
                                 <span>Struk</span>
+                              </button>
+                              <button
+                                onClick={() => handlePermanentDelete(order.id)}
+                                className="inline-flex items-center justify-center rounded-lg border border-rose-200 bg-rose-50 p-1.5 text-rose-600 hover:bg-rose-100 transition shadow-2xs"
+                                title="Hapus Permanen"
+                              >
+                                <XCircle className="h-3.5 w-3.5" />
                               </button>
                             </div>
                           </td>
@@ -2297,6 +2342,15 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas chat ini ya Kak. Sel
                       <span>ACC Pembayaran Lunas</span>
                     </button>
                   )}
+
+                  <button
+                    onClick={() => handlePermanentDelete(selectedOrderDetail.id)}
+                    className="bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 font-bold px-3 py-2 rounded-xl text-xs inline-flex items-center gap-1.5 transition shadow-2xs"
+                    title="Hapus Pesanan Selamanya"
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                    <span>Hapus Permanen</span>
+                  </button>
 
                   <button
                     onClick={() => setSelectedOrderDetail(null)}

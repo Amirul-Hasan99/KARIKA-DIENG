@@ -434,8 +434,21 @@ Mohon segera di-ACC dan diproses kurir pengantarannya ya Admin. Terima kasih ban
 
         {error && !order ? (
           <section className="mt-8 rounded-3xl border border-[#e8e5dc] bg-white p-7 text-center">
-            <h1 className="text-2xl font-bold">Pesanan belum ditemukan</h1>
-            <p className="mt-2 text-sm text-[#77766f]">{error}</p>
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-rose-500 mb-4">
+              <Flaticon name="exclamation" className="text-2xl" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900">Pesanan Tidak Ditemukan</h1>
+            <p className="mt-2 text-sm text-[#77766f]">
+              {error.includes("404") || error.includes("ditemukan") 
+                ? "Pesanan mungkin telah dihapus secara permanen dari sistem oleh Admin karena pembatalan atau alasan keamanan." 
+                : error}
+            </p>
+            <Link
+              href="/catalog"
+              className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#292a23] px-6 py-3 text-sm font-bold text-[#f4ce00] hover:bg-black transition"
+            >
+              <span>Belanja Kembali</span>
+            </Link>
           </section>
         ) : !order ? (
           <div className="mt-8 rounded-3xl border border-[#e8e5dc] bg-white p-10 text-center">
@@ -452,6 +465,8 @@ Mohon segera di-ACC dan diproses kurir pengantarannya ya Admin. Terima kasih ban
                 className={`p-6 sm:p-8 ${
                   order.payment_status === "settlement"
                     ? "bg-gradient-to-br from-emerald-50 via-teal-50 to-white border-b border-emerald-100"
+                    : order.payment_status === "failed"
+                    ? "bg-gradient-to-br from-rose-50 via-rose-50 to-white border-b border-rose-100"
                     : "bg-white border-b border-[#efeee9]"
                 }`}
               >
@@ -474,12 +489,53 @@ Mohon segera di-ACC dan diproses kurir pengantarannya ya Admin. Terima kasih ban
                   </div>
                 </div>
 
-                <h1 className="mt-4 text-3xl font-extrabold tracking-tight">
-                  Terima kasih, {order.customer_name || "Pelanggan"}!
-                </h1>
-                <p className="mt-2 text-sm text-[#77766f] leading-relaxed">
-                  Pesanan oleh-oleh Dieng Anda kini sedang diproses oleh toko &amp; kurir.
-                </p>
+                {order.payment_status === "failed" ? (
+                  <div className="mt-6">
+                    <div className="flex items-center gap-3 text-rose-600">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 shadow-sm">
+                        <Flaticon name="exclamation" className="text-xl" />
+                      </div>
+                      <div>
+                        <h1 className="text-2xl font-black tracking-tight">PESANAN DIBATALKAN</h1>
+                        <p className="text-sm font-bold opacity-80 uppercase tracking-wide">Status: Void / Admin Terkait</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 rounded-2xl bg-white border-2 border-rose-100 p-4 shadow-sm">
+                      <p className="text-sm text-slate-700 leading-relaxed">
+                        Maaf Kak, pesanan Anda dengan nomor <strong>#{order.order_number}</strong> telah dibatalkan oleh Admin Dioleh - oleh Dieng. Hal ini biasanya terjadi jika ada kendala pada stok barang, lokasi pengantaran di luar jangkauan (lebih dari 8km), atau permintaan pembatalan.
+                      </p>
+                      <p className="mt-3 text-[11px] text-slate-500 italic">
+                        *Jika ini adalah kesalahan, silakan hubungi admin via WhatsApp untuk memulihkan pesanan Anda.
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <a
+                          href={wa}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition"
+                        >
+                          <Flaticon name="whatsapp" variant="brands" className="text-sm" />
+                          <span>Hubungi Admin</span>
+                        </a>
+                        <Link
+                          href="/catalog"
+                          className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-[#f4ce00] hover:bg-black transition"
+                        >
+                          <span>Pesan Ulang</span>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <h1 className="mt-4 text-3xl font-extrabold tracking-tight">
+                      Terima kasih, {order.customer_name || "Pelanggan"}!
+                    </h1>
+                    <p className="mt-2 text-sm text-[#77766f] leading-relaxed">
+                      Pesanan oleh-oleh Dieng Anda kini sedang diproses oleh toko &amp; kurir.
+                    </p>
+                  </>
+                )}
 
                 {/* Status Badges */}
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">

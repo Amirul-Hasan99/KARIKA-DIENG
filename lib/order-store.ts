@@ -639,6 +639,53 @@ export async function cancelOrder(orderId: string, reason: string = "Dibatalkan"
   return updated;
 }
 
+export async function deleteOrder(orderId: string): Promise<boolean> {
+  let found = false;
+  
+  // 1. Memory
+  if (ordersStore.has(orderId)) {
+    ordersStore.delete(orderId);
+    found = true;
+  } else {
+    for (const [id, order] of ordersStore.entries()) {
+      if (order.id === orderId || order.order_number === orderId) {
+        ordersStore.delete(id);
+        found = true;
+        break;
+      }
+    }
+  }
+
+  // 2. Disk
+  try {
+    const diskOrders = loadOrdersFromFile();
+    const filtered = diskOrders.filter(o => o.id !== orderId && o.order_number !== orderId);
+    if (filtered.length !== diskOrders.length) {
+      saveOrdersToFile(filtered);
+      found = true;
+    }
+  } catch (err) {}
+
+  // 3. Neon
+  try {
+    const sql = getNeonSql();
+    if (sql) {
+      await sql`DELETE FROM orders WHERE id = ${orderId} OR order_number = ${orderId}`;
+      found = true;
+    }
+  } catch (e) {}
+
+  // 4. Firestore
+  try {
+    if (hasFirestoreCredentials()) {
+      await adminDb!.collection("orders").doc(orderId).delete();
+      found = true;
+    }
+  } catch (err) {}
+
+  return found;
+}
+
 export async function updateOrderPaymentProof(
   orderIdOrNumber: string,
   proofUrl: string
