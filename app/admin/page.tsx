@@ -402,7 +402,7 @@ Jika ada petunjuk arah atau patokan tambahan, silakan balas chat ini ya Kak. Sel
       }
 
       // Refresh data
-      fetchOrders();
+      // Polling hook akan otomatis update data
       // Tutup modal jika sedang terbuka
       setSelectedOrderDetail(null);
       alert("Pesanan berhasil dihapus secara permanen.");
