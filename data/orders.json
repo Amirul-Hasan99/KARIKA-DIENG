@@ -1,5 +1,162 @@
 [
   {
+    "id": "ord_d19f7040-9318-4231-bf56-f6d2cc57fb42",
+    "order_number": "GC-261114-DELIVERY-RB4S",
+    "table_id": "delivery",
+    "table_number": "delivery",
+    "customer_name": "Budi Santoso",
+    "customer_phone": "082345678901",
+    "delivery_address": "Jl. Panenjoan No. 12, Kawasan Dieng",
+    "coordinates": {
+      "lat": -7.2051,
+      "lng": 109.9115
+    },
+    "delivery_distance_km": 0.11,
+    "items": [
+      {
+        "menu_id": "keripik-jamur",
+        "name": "Keripik Jamur",
+        "price": 150000,
+        "qty": 4,
+        "selected_modifiers": [],
+        "subtotal": 600000
+      },
+      {
+        "menu_id": "purwaceng",
+        "name": "Purwaceng",
+        "price": 240000,
+        "qty": 1,
+        "selected_modifiers": [],
+        "subtotal": 240000
+      }
+    ],
+    "total_amount": 840000,
+    "payment_status": "pending",
+    "order_status": "received",
+    "delivery_status": "pending",
+    "payment_type": "qris",
+    "snap_token": "snap-dummy-GC-261114-DELIVERY-RB4S",
+    "snap_redirect_url": "/orders/GC-261114-DELIVERY-RB4S?payment=qris",
+    "created_at": "2026-11-14T04:44:18.948Z",
+    "updated_at": "2026-11-14T04:44:18.948Z"
+  },
+  {
+    "id": "ord_fdea4ae0-1778-4590-bfdd-2a6a98f442fe",
+    "order_number": "GC-261114-DELIVERY-ROO6",
+    "table_id": "delivery",
+    "table_number": "delivery",
+    "customer_name": "Andi Wijaya",
+    "customer_phone": "081234567890",
+    "delivery_address": "Jl. Dieng No. 45, Kawasan Dieng",
+    "coordinates": {
+      "lat": -7.204176,
+      "lng": 109.911214
+    },
+    "delivery_distance_km": 0,
+    "items": [
+      {
+        "menu_id": "carica-biasa",
+        "name": "Carica Biasa",
+        "price": 22000,
+        "qty": 2,
+        "selected_modifiers": [],
+        "subtotal": 44000
+      },
+      {
+        "menu_id": "mie-ongklok",
+        "name": "Mie Ongklok Instan",
+        "price": 78000,
+        "qty": 3,
+        "selected_modifiers": [],
+        "subtotal": 234000
+      }
+    ],
+    "total_amount": 278000,
+    "payment_status": "settlement",
+    "order_status": "completed",
+    "delivery_status": "delivered",
+    "payment_type": "cod",
+    "snap_token": "",
+    "snap_redirect_url": "",
+    "created_at": "2026-11-14T04:44:18.832Z",
+    "updated_at": "2026-11-14T04:44:36.706Z",
+    "midtrans_transaction_id": "cash_1794631462667"
+  },
+  {
+    "id": "ord_cae47765-d3ad-47db-ad21-f5b3e967a1a7",
+    "order_number": "GC-261114-DELIVERY-1ISL",
+    "table_id": "delivery",
+    "table_number": "delivery",
+    "customer_name": "Andi Wijaya",
+    "customer_phone": "081234567890",
+    "delivery_address": "Jl. Dieng No. 45, Kawasan Dieng",
+    "coordinates": {
+      "lat": -7.204176,
+      "lng": 109.911214
+    },
+    "delivery_distance_km": 0,
+    "items": [
+      {
+        "menu_id": "carica-biasa",
+        "name": "Carica Biasa",
+        "price": 22000,
+        "qty": 5,
+        "selected_modifiers": [],
+        "subtotal": 110000
+      },
+      {
+        "menu_id": "mie-ongklok",
+        "name": "Mie Ongklok Instan",
+        "price": 78000,
+        "qty": 3,
+        "selected_modifiers": [],
+        "subtotal": 234000
+      }
+    ],
+    "total_amount": 344000,
+    "payment_status": "pending",
+    "order_status": "received",
+    "delivery_status": "pending",
+    "payment_type": "cod",
+    "snap_token": "",
+    "snap_redirect_url": "",
+    "created_at": "2026-11-14T04:30:22.043Z",
+    "updated_at": "2026-11-14T04:30:22.043Z"
+  },
+  {
+    "id": "ord_d6aca0d9-e986-4aeb-bf26-30a53e1b573d",
+    "order_number": "GC-261113-DELIVERY-LPCV",
+    "table_id": "delivery",
+    "table_number": "delivery",
+    "customer_name": "Oki",
+    "customer_phone": "083122046357",
+    "delivery_address": "Homestay Panggung",
+    "coordinates": {
+      "lat": -7.199100838305452,
+      "lng": 109.88924132279521
+    },
+    "delivery_distance_km": 2.49,
+    "items": [
+      {
+        "menu_id": "carica-kardus",
+        "name": "Carica Kardus",
+        "price": 22000,
+        "qty": 8,
+        "selected_modifiers": [],
+        "subtotal": 176000
+      }
+    ],
+    "total_amount": 176000,
+    "payment_status": "pending",
+    "order_status": "received",
+    "delivery_status": "pending",
+    "payment_type": "qris",
+    "snap_token": "snap-dummy-GC-261113-DELIVERY-LPCV",
+    "snap_redirect_url": "/orders/GC-261113-DELIVERY-LPCV?payment=qris",
+    "created_at": "2026-11-13T15:13:01.758Z",
+    "updated_at": "2026-11-13T15:13:01.758Z"
+  },
+  {
     "id": "ord_56a58915-bc0c-4f83-a87f-0e1ad7989582",
     "order_number": "GC-261112-DELIVERY-I406",
     "table_id": "delivery",

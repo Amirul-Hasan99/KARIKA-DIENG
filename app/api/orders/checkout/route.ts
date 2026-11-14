@@ -27,17 +27,22 @@ const distanceKm = (a: {lat:number;lng:number}, b: {lat:number;lng:number}) => {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    // Validate request inputs safely
     const { customerName, customerPhone, address, coordinates, items, paymentType } = body;
-    if (typeof customerName !== "string" || customerName.trim().length < 2 || typeof customerPhone !== "string" || customerPhone.replace(/\D/g, "").length < 9 || typeof address !== "string" || address.trim().length < 8) {
-      return NextResponse.json({ error: "Nama, nomor telepon, dan alamat lengkap wajib diisi." }, { status: 400 });
+    
+    // Strict Input Validation
+    const errors: string[] = [];
+    if (typeof customerName !== "string" || customerName.trim().length < 2) errors.push("Nama tidak valid");
+    if (typeof customerPhone !== "string" || customerPhone.replace(/\D/g, "").length < 9) errors.push("Nomor telepon tidak valid");
+    if (typeof address !== "string" || address.trim().length < 8) errors.push("Alamat tidak valid");
+    if (!coordinates || !Number.isFinite(coordinates.lat) || !Number.isFinite(coordinates.lng)) errors.push("Lokasi tidak valid");
+    if (!Array.isArray(items) || items.length === 0) errors.push("Item tidak valid");
+    if (!["qris", "cod"].includes(paymentType)) errors.push("Metode pembayaran tidak valid");
+
+    if (errors.length > 0) {
+      return NextResponse.json({ error: "Data pesanan tidak valid.", details: errors }, { status: 422 });
     }
-    if (!coordinates || !Number.isFinite(coordinates.lat) || !Number.isFinite(coordinates.lng) || Math.abs(coordinates.lat) > 90 || Math.abs(coordinates.lng) > 180) {
-      return NextResponse.json({ error: "Pin lokasi pengantaran tidak valid." }, { status: 400 });
-    }
-    if (!Array.isArray(items) || items.length === 0 || !["qris", "cod"].includes(paymentType)) {
-      return NextResponse.json({ error: "Item pesanan atau metode pembayaran tidak valid." }, { status: 400 });
-    }
+
     const quantity = items.reduce((sum: number, item: {qty?: number}) => sum + (Number.isSafeInteger(item.qty) && item.qty! > 0 && item.qty! <= 99 ? item.qty! : 0), 0);
     if (quantity < MIN_ITEMS) return NextResponse.json({ error: `Minimum pembelian ${MIN_ITEMS} item.` }, { status: 400 });
     if (items.some((item: {qty?:number}) => !Number.isSafeInteger(item.qty) || item.qty! <= 0 || item.qty! > 99)) return NextResponse.json({ error: "Jumlah item tidak valid." }, { status: 400 });
@@ -115,8 +120,7 @@ export async function POST(req: NextRequest) {
       address: address.trim(),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Checkout gagal.";
-    const status = /belum tersedia|belum memiliki harga|tidak valid/.test(message) ? 400 : 503;
-    return NextResponse.json({ error: message }, { status });
+    console.error("[checkout-error]", error);
+    return NextResponse.json({ error: "Checkout gagal. Silakan coba lagi." }, { status: 500 });
   }
 }

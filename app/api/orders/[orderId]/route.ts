@@ -25,6 +25,12 @@ export async function PATCH(
   { params }: { params: Promise<{ orderId: string }> }
 ) {
   try {
+    // Authorization check: Only admin can update order status
+    const adminCookie = req.cookies.get("dioleh2_admin_session");
+    if (!adminCookie) {
+      return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 401 });
+    }
+
     const { orderId } = await params;
     const body = await req.json();
     const { order_status, delivery_status } = body as {

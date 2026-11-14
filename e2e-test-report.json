@@ -1,0 +1,28 @@
+[
+  {
+    "name": "Create Order COD",
+    "status": "PASS",
+    "details": {
+      "orderId": "ord_fdea4ae0-1778-4590-bfdd-2a6a98f442fe"
+    }
+  },
+  {
+    "name": "Create Order QRIS",
+    "status": "PASS",
+    "details": {
+      "orderId": "ord_d19f7040-9318-4231-bf56-f6d2cc57fb42"
+    }
+  },
+  {
+    "name": "Fetch Admin Orders",
+    "status": "PASS"
+  },
+  {
+    "name": "Confirm Cash Payment",
+    "status": "PASS"
+  },
+  {
+    "name": "Update Delivery Status",
+    "status": "PASS"
+  }
+]

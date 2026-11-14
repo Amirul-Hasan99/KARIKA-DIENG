@@ -10,8 +10,8 @@ function decodeBase64Url(value: string) {
 }
 
 async function isAdminSessionValid(token: string | undefined) {
-  const secret = process.env.ADMIN_SESSION_SECRET || "karika_dieng_super_secret_session_key_2026_wonosobo";
-  const username = process.env.ADMIN_USERNAME || "karikadieng";
+  const secret = process.env.ADMIN_SESSION_SECRET;
+  const username = process.env.ADMIN_USERNAME;
   if (!token || !secret || secret.length < 32 || !username) return false;
   try {
     const [payload, signature, extra] = token.split(".");
@@ -50,7 +50,9 @@ export async function middleware(request: NextRequest) {
 
   // Not a protected route
   if (isLoginPage || isLoginApi || (!protectedPage && !protectedApi)) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    addSecurityHeaders(response);
+    return response;
   }
 
   // Protected route with valid session
@@ -60,6 +62,7 @@ export async function middleware(request: NextRequest) {
     response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
     response.headers.set("Pragma", "no-cache");
     response.headers.set("Expires", "0");
+    addSecurityHeaders(response);
     return response;
   }
 
@@ -67,6 +70,7 @@ export async function middleware(request: NextRequest) {
   if (protectedApi) {
     const errorResponse = NextResponse.json({ error: "Autentikasi admin diperlukan." }, { status: 401 });
     errorResponse.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+    addSecurityHeaders(errorResponse);
     return errorResponse;
   }
 
@@ -75,7 +79,28 @@ export async function middleware(request: NextRequest) {
   redirectResponse.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
   redirectResponse.headers.set("Pragma", "no-cache");
   redirectResponse.headers.set("Expires", "0");
+  addSecurityHeaders(redirectResponse);
   return redirectResponse;
+}
+
+function addSecurityHeaders(response: NextResponse) {
+  // Prevent MIME type sniffing
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  
+  // Clickjacking protection
+  response.headers.set("X-Frame-Options", "DENY");
+  
+  // XSS protection (legacy, but still useful)
+  response.headers.set("X-XSS-Protection", "1; mode=block");
+  
+  // HSTS (tell browsers to always use HTTPS)
+  response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  
+  // Referrer policy
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  
+  // Permissions policy
+  response.headers.set("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
 }
 
 export const config = { matcher: ["/admin/:path*", "/api/:path*"] };
